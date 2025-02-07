@@ -8,25 +8,43 @@
 import SwiftUI
 
 struct UserListCell: View {
-    let user:UserInfo
+    let user:User
     
     var body: some View {
         HStack {
                 
-            if let image = user.image {
-                Image(uiImage: image)
+            let url = user.imageURL()
+            
+            AsyncImage(url: url,
+                       content: { image in
+                image
                     .resizable()
-                    .frame(width: 50, height:50)
-            }
-            else {
+                    .frame(width: 50, height: 50)
+                    .clipShape(Circle())
+                
+            },
+                       placeholder: {
                 Circle()
                     .fill(Color.secondaryInactive)
                     .frame(width: 50, height: 50)
+            })
+            .id(user.id)
+            
+            VStack(alignment: .leading, spacing: 20) {
+                Text(user.name)
+                
+                Text(user.position)
+                    .foregroundStyle(.secondary)
+                
+                Text(user.email)
+                
+                Text(user.phone)
+                
             }
         }
     }
 }
 
 #Preview {
-    UserListCell(user: UserInfo.fromUser(User.dummies[0]))
+    UserListCell(user: User.dummies[0])
 }

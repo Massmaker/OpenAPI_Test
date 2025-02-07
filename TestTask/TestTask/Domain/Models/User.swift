@@ -7,13 +7,13 @@
 
 import Foundation
 
-typealias UserId = String
-typealias UserPositionId = String
+typealias UserId = Int
+typealias UserPositionId = Int
 typealias UserPhotoLink = String
 
 /// - Important: use keyDecodingStrategy `convertFromSnakeCase` for reteiving data and keyEncodingStartegy `convertToSnakeCase` for posting data
 
-struct User:Decodable {
+struct User:Decodable, Hashable, Identifiable {
     let name: String
     let id: UserId
     let email:String
@@ -21,41 +21,27 @@ struct User:Decodable {
     let position:String
     let positionId:UserPositionId
     var photo:UserPhotoLink?
-    var registrationTimeStamp:TimeInterval
+    var registrationTimestamp:TimeInterval
 }
 
 
 extension User {
     static var dummies:[User] {
-        [User(name: "Ivan Yavorin", id: "12333", email: "some.email@service.com", phone: "+38097444333222", position: "iOS Developer", positionId: "11223344", photo: nil, registrationTimeStamp: 123999445),
-         User(name: "John Doe", id: "12334", email: "another.email@service.com", phone: "+38097444333233", position: "Dummy user", positionId: "1001", photo: nil, registrationTimeStamp: 123999433)
+        [User(name: "Ivan Yavorin", id: 12333, email: "some.email@service.com", phone: "+38097444333222", position: "iOS Developer", positionId: 11223344, photo: nil, registrationTimestamp: 123999445),
+         User(name: "John Doe", id: 12334, email: "another.email@service.com", phone: "+38097444333233", position: "Dummy user", positionId: 1001, photo: nil, registrationTimestamp: 123999433)
          ]
     }
 }
 
-//MARK: -
-import UIKit
-struct UserInfo:Hashable, Identifiable {
 
-    let id:UserId
-    let name:String
-    let positionTitle:String
-    let emailString:String
-    let phoneNumberString:String
-    
-    private(set) var image:UIImage?
-
-    mutating func setImage(_ uiImage:UIImage) {
-        self.image = uiImage
+extension User {
+    func imageURL() -> URL? {
+        guard let string = photo,
+              let url = URL(string: string) else {
+            return nil
+        }
+        
+        return url
     }
 }
-extension UserInfo {
-    static func fromUser(_ user:User) -> UserInfo {
-        if let link = user.photo {
-            UserInfo(id: "TestUserId_1", name: user.name, positionTitle: user.position, emailString: user.email, phoneNumberString: user.email, image: ImageCache.imageForPhotoLink(link))
-        }
-        else {
-            UserInfo(id: "TestUserId_1", name: user.name, positionTitle: user.position, emailString: user.email, phoneNumberString: user.email, image: nil)
-        }
-    }
-}
+

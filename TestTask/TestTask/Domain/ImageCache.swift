@@ -14,6 +14,9 @@ import UIKit
 
 actor ImageCache {
 
+    static var shared = ImageCache()
+    private init() {}
+    
     enum ImageLoadingState {
         case inProgress(Task<Data?, Never>)
         case completed(Data)
@@ -51,6 +54,20 @@ actor ImageCache {
     }
     
     private func loadData(for link:UserPhotoLink) async throws -> Data {
+        guard let imageURL = URL(string: link) else {
+            throw URLError(URLError.Code.badURL)
+        }
         
+        do {
+            let taskResponse = try await URLSession.shared.data(from: imageURL)
+            let data = taskResponse.0
+            guard !data.isEmpty else {
+                throw URLError(.badServerResponse)
+            }
+            return data
+        }
+        catch {
+            throw error
+        }
     }
 }

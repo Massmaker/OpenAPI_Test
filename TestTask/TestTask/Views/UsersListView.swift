@@ -9,26 +9,43 @@ import SwiftUI
 
 struct UsersListView: View {
     
-    @ObservedObject var viewModel:UsersListViewModel
+    @ObservedObject var viewModel:UsersListViewModel<UsersLoader>
     
     var body: some View {
-        VStack {
+        VStack(spacing:0) {
             HeaderView(title: "Working wit GET request")
             
-            if viewModel.users.isEmpty {
-                
+            if viewModel.users.isEmpty && !viewModel.isLoading {
+                EmptyUsersListView()
             }
             else {
                 List(viewModel.users) { user in
                     UserListCell(user:user)
+                        .id(user.id)
+                        .onAppear{ viewModel.onUserAppear(user.id) }
                 }
+                .listStyle(.plain)
             }
             
-            Spacer()
+        }
+        .overlay(alignment: .bottom, content: {
+            if viewModel.isLoading {
+                HStack {
+                    Spacer()
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .scaleEffect(1.5)
+                    Spacer()
+                }
+                .padding(.vertical)
+            }
+        })
+        .onAppear{
+            viewModel.onViewAppear()
         }
     }
 }
 
 #Preview {
-    UsersListView(viewModel: UsersListViewModel())
+    UsersListView(viewModel: UsersListViewModel(loader: UsersLoader(), pageItemsCount: 6))
 }

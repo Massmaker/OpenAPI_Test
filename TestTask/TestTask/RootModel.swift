@@ -7,12 +7,10 @@
 
 import Foundation
 
+@MainActor
 final class RootModel:ObservableObject {
-    var usersListViewModel:UsersListViewModel
+    var usersListViewModel:UsersListViewModel = UsersListViewModel(loader: UsersLoader(), pageItemsCount: 6)
     
-    let imageCache = ImageCache()
-    
-    init() {
-        usersListViewModel = UsersListViewModel()
-    }
+    let imageCache = ImageCache.shared
+ 
 }
