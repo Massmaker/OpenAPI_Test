@@ -9,10 +9,12 @@ import Foundation
 import UIKit
 
 
+protocol DataForURLCache {
+    func readData(forLink link:String) async -> Data?
+}
 
 
-
-actor ImageCache {
+actor ImageCache : DataForURLCache {
 
     static var shared = ImageCache()
     private init() {}

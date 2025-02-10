@@ -6,9 +6,17 @@
 //
 
 import Foundation
+import UIKit
+import OSLog
+
+#if DEBUG
+fileprivate let logger = Logger(subsystem: "ViewModels", category: "UsersListViewModel")
+#else
+fileprivate let logger = Logger(.disabled)
+#endif
 
 @MainActor
-final class UsersListViewModel<Loader>:ObservableObject where Loader:Pageable, Loader.Value == User {
+final class UsersListViewModel<Loader, AvatarCache:DataForURLCache>:ObservableObject where Loader:Pageable, Loader.Value == User {
     
     enum LoadingStatus {
         
@@ -21,7 +29,7 @@ final class UsersListViewModel<Loader>:ObservableObject where Loader:Pageable, L
     private let usersSource: Loader
     private(set) var pageSize:Int
     private var currentPage:PageInfo = .default
-    
+    let imageCache: AvatarCache
     private(set) var loadingState:LoadingStatus = .idle {
         didSet {
             switch loadingState {
@@ -33,7 +41,10 @@ final class UsersListViewModel<Loader>:ObservableObject where Loader:Pageable, L
         }
     }
     
-    @Published private(set) var users:[User] = []
+    
+    private var avatarTasks:[String:Task<Void, Never>] = [:]
+    
+    @Published private(set) var users:[UserUIInfo] = []
     @Published private(set) var isLoading:Bool = false
     
     var lastApearedUserIndex:Int = 0
@@ -46,8 +57,10 @@ final class UsersListViewModel<Loader>:ObservableObject where Loader:Pageable, L
         }
     }
     
-    init(loader: Loader, pageItemsCount:Int) {
+    init(loader: Loader, pageItemsCount:Int, profilePhotoCache: AvatarCache) {
         self.usersSource = loader
+        self.imageCache = profilePhotoCache
+        
         pageSize = pageItemsCount
     }
     
@@ -91,6 +104,23 @@ final class UsersListViewModel<Loader>:ObservableObject where Loader:Pageable, L
         }
     }
     
+    func userProfileImage(for user:User) async -> UIImage? {
+        
+        guard let linkString = user.photo else {
+            return nil
+        }
+        
+        guard let imageData = await self.imageCache.readData(forLink: linkString) else {
+            return nil
+        }
+        
+        guard let uiImage = UIImage(data: imageData) else {
+            return nil
+        }
+        
+        return uiImage
+    }
+    
     private func canLoadMore() -> Bool {
         currentPage.hasNext
     }
@@ -106,7 +136,7 @@ final class UsersListViewModel<Loader>:ObservableObject where Loader:Pageable, L
             let receivedUsers = response.items
             let pageInfo = response.pageInfo
             self.currentPage = pageInfo
-            var items:[User] = self.users + receivedUsers
+            var items:[UserUIInfo] = self.users + receivedUsers.map({UserUIInfo(user: $0)})
     
             items.sort {
                 $0.registrationTimestamp < $1.registrationTimestamp
@@ -114,12 +144,50 @@ final class UsersListViewModel<Loader>:ObservableObject where Loader:Pageable, L
             
             DispatchQueue.main.async(execute: {[weak self] in
                 guard let self else { return }
+                logger.notice("Updating with new users")
                 self.users = items
                 loadingState = .idle
             })
+            
+            //start obtaining profile avatars for new users
+            
+            
+            receivedUsers
+                .filter{$0.photo != nil}
+                .map{
+                    (userId: $0.id, imageURLString:$0.photo!)
+                }
+                .forEach { (userId, photoURLString) in
+                    logger.notice("postponing the Image data loading")
+                    let imageTask =  Task {[weak self] in
+                        guard let self else {
+                            return
+                        }
+                        
+                        if let imageData = await imageCache.readData(forLink:  photoURLString) {
+                            logger.notice("Updating with image data \(imageData.count) bytes")
+                            self.updateAvatar(by: userId, with: imageData)
+                        }
+                    }
+                    
+                    self.avatarTasks[photoURLString] = imageTask
+                }
+            
         }
         catch {
             
         }
+    }
+    
+    private func updateAvatar(by userId:UserId, with data:Data) {
+        guard let uiImage = UIImage(data:data) else {
+            return
+        }
+        
+        guard let firstIndex = self.users.firstIndex(where: {$0.id == userId}) else {
+            return
+        }
+        
+        self.users[firstIndex].profileImage = uiImage
     }
 }

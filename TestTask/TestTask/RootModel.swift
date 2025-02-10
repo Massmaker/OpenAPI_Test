@@ -9,7 +9,7 @@ import Foundation
 
 @MainActor
 final class RootModel:ObservableObject {
-    var usersListViewModel:UsersListViewModel = UsersListViewModel(loader: UsersLoader(), pageItemsCount: 6)
+    var usersListViewModel:UsersListViewModel = UsersListViewModel(loader: UsersLoader(), pageItemsCount: 6, profilePhotoCache: ImageCache.shared)
     
     let imageCache = ImageCache.shared
  

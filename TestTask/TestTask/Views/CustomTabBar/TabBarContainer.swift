@@ -34,7 +34,7 @@ struct TabBarContainer<Content>: View where Content:View {
 #Preview {
     
     TabBarContainer(selection: .constant(.signup), content: {
-        UsersListView(viewModel: UsersListViewModel(loader: UsersLoader(), pageItemsCount: 6))
+        UsersListView(viewModel: UsersListViewModel(loader: UsersLoader(), pageItemsCount: 6, profilePhotoCache: ImageCache.shared))
             .customTabBarItem(.users, selection: .constant(.users))
         
         SignupView()

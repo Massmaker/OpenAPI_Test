@@ -9,7 +9,7 @@ import SwiftUI
 
 struct UsersListView: View {
     
-    @ObservedObject var viewModel:UsersListViewModel<UsersLoader>
+    @ObservedObject var viewModel:UsersListViewModel<UsersLoader,ImageCache>
     
     var body: some View {
         VStack(spacing:0) {
@@ -19,10 +19,11 @@ struct UsersListView: View {
                 EmptyUsersListView()
             }
             else {
-                List(viewModel.users) { user in
-                    UserListCell(user:user)
-                        .id(user.id)
-                        .onAppear{ viewModel.onUserAppear(user.id) }
+                List(viewModel.users) { userInfo in
+                    UserListCell(user:userInfo, avatarImage: userInfo.profileImage)
+                            .id(userInfo.id)
+                            .onAppear{ viewModel.onUserAppear(userInfo.id) // scrolling to bottom of the list detection}
+                    }
                 }
                 .listStyle(.plain)
             }
@@ -47,5 +48,5 @@ struct UsersListView: View {
 }
 
 #Preview {
-    UsersListView(viewModel: UsersListViewModel(loader: UsersLoader(), pageItemsCount: 6))
+    UsersListView(viewModel: UsersListViewModel(loader: UsersLoader(), pageItemsCount: 6, profilePhotoCache: ImageCache.shared))
 }
