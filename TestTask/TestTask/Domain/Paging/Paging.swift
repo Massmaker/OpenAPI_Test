@@ -74,7 +74,6 @@ extension UsersLoader:Pageable  {
             }
         }
         catch {
-            print("Error decoding: \(error)")
             throw error
         }
         

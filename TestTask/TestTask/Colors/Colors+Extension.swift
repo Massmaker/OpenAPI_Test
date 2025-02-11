@@ -16,4 +16,5 @@ extension Color {
     static let disabledItem:Color = Color("Button_disabled_bg")
     static let secondaryDarkColor:Color = Color("Button_secondary_dark")
     //static let barBackground:Color = Color("Bar_background")
+    static let disabledItemBorder:Color = Color("Border_Item_Disabled")
 }

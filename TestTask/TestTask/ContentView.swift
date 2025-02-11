@@ -16,11 +16,24 @@ struct RootView: View {
     
     var body: some View {
         TabBarContainer(selection: $selectedTab, content: {
-            UsersListView(viewModel: rootModel.usersListViewModel)
-                .customTabBarItem(.users, selection: $selectedTab)
+            if selectedTab == .users {
+                UsersListView(viewModel: rootModel.usersListViewModel)
+                    .customTabBarItem(.users, selection: $selectedTab)
+                
+            }
+            else {
+                Color.secondaryDarkColor
+                    .customTabBarItem(.users, selection: $selectedTab)
+            }
             
-            SignupView()
-                .customTabBarItem(.signup, selection: $selectedTab)
+            if selectedTab == .signup {
+                SignupView(viewModel: rootModel.userSignupViewModel)
+                    .customTabBarItem(.signup, selection: $selectedTab)
+            }
+            else {
+                Color.secondary
+                    .customTabBarItem(.signup, selection: $selectedTab)
+            }
         })
         .overlay {
             if !networkAvailabilityMonitor.isConnected {

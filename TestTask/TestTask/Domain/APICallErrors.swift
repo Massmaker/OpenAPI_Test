@@ -9,4 +9,6 @@ import Foundation
 
 enum APICallError:Error {
     case validationFailed
+    case reasonableMessage(String)
 }
+

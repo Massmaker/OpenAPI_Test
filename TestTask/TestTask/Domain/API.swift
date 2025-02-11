@@ -9,6 +9,9 @@ import Foundation
 
 enum API {
     case getUsers(page:Int, size:Int)
+    case getPositions
+    case getToken
+    case registerUser(info:UserRegistrationInfo, token:String)
 }
 
 extension API {
@@ -20,6 +23,12 @@ extension API {
         switch self {
         case .getUsers(let page, let size):
             "users?page=\(page)&count=\(size)"
+        case .getPositions:
+            "positions"
+        case .getToken:
+            "token"
+        case .registerUser:
+            "users"
         }
     }
     
@@ -29,8 +38,20 @@ extension API {
     
     var method:String {
         switch self {
-        case .getUsers(let page, let size):
+        case .getUsers, .getPositions, .getToken:
             "GET"
+        case .registerUser:
+            "POST"
+        }
+    }
+    
+    var authorizationHeader:String? {
+        switch self {
+       
+        case .registerUser(_, let token):
+            return "Token \(token)"
+        default:
+            return nil
         }
     }
     
