@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-struct SignupView: View {
+struct SignupView<PositionsLoader:UserPositionsLoading>: View {
     
-    @ObservedObject var viewModel:SignupViewModel<UserPositionsLoader>
+    @ObservedObject var viewModel:SignupViewModel<PositionsLoader>
     
     var body: some View {
         VStack(spacing:0) {
@@ -56,5 +56,7 @@ struct SignupView: View {
 }
 
 #Preview {
-    SignupView(viewModel: SignupViewModel<UserPositionsLoader>(userPositionsLoader: UserPositionsLoader()))
+//    SignupView(viewModel: SignupViewModel<UserPositionsLoader>(userPositionsLoader: UserPositionsLoader()))
+    
+    SignupView(viewModel: SignupViewModel(userPositionsLoader: UserPositionsDummy()))
 }
