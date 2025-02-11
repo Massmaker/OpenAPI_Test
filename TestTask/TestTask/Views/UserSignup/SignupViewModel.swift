@@ -14,6 +14,10 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading>: ObservableObj
     @Published private(set) var availablePositions:[UserPosition] = []
     @Published var positionLoadingIsError:Bool = false
     @Published private(set) var isLoadingUserPositions:Bool = false
+    @Published var nameString:String = ""
+    @Published var emailString:String = ""
+    @Published var phoneNumberString:String = ""
+    @Published private(set) var isSignupEnabled:Bool = false
     
     private let userPositionsLoader:PositionsLoader
     
@@ -64,4 +68,10 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading>: ObservableObj
         
         loadUserPositions()
     }
+    
+    func sendSignup() {
+        
+    }
+    
+    //MARK: -
 }

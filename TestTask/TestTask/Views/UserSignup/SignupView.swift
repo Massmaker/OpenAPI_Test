@@ -7,17 +7,59 @@
 
 import SwiftUI
 
+enum FocuedTextField {
+    case name
+    case email
+    case phone
+}
+
+
+struct FocusedText: FocusedValueKey {
+  typealias Value = Binding<String>
+}
+
+extension FocusedValues {
+  var textValue: FocusedText.Value? {
+    get { self[FocusedText.self] }
+    set { self[FocusedText.self] = newValue }
+  }
+}
+
 struct SignupView<PositionsLoader:UserPositionsLoading>: View {
     
     @ObservedObject var viewModel:SignupViewModel<PositionsLoader>
+//    @FocusState private var focusedTextField:FocuedTextField?
+    @FocusedBinding(\.textValue) var focusedTextBinding
     
     var body: some View {
         VStack(spacing:0) {
             HeaderView(title: "Working with POST request")
-            
-            
-            positionSelectionView
+            ScrollView {
+                VStack(spacing: 16) {
+                    BorderedTextInputView(text: $viewModel.nameString, validationType: .name)
+//                        .focusedValue(\.textValue, $focusedTextBinding)
+//                        .focused($focusedTextField, equals: .name)
+                        
                     
+                    BorderedTextInputView(text: $viewModel.emailString, validationType: .email)
+//                        .focused($focusedTextField, equals: .email)
+                    
+                    BorderedTextInputView(text: $viewModel.phoneNumberString, validationType: .phoneNumber)
+//                        .focused($focusedTextField, equals: .phone)
+                }
+                .padding()
+                
+                positionSelectionView
+                
+            }
+                    
+            
+            Button("Sign up", action: {
+                viewModel.sendSignup()
+            })
+            .buttonStyle(.primaryButtonStyle)
+            .disabled(!viewModel.isSignupEnabled)
+            .padding(.bottom, 8)
             
         }
         .onAppear{
