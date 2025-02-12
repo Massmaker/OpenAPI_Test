@@ -25,9 +25,9 @@ extension FocusedValues {
   }
 }
 
-struct SignupView<PositionsLoader:UserPositionsLoading>: View {
+struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker:CameraAccessPermissionsHandling>: View {
     
-    @ObservedObject var viewModel:SignupViewModel<PositionsLoader>
+    @ObservedObject var viewModel:SignupViewModel<PositionsLoader, CameraPermissionsChecker>
 //    @FocusState private var focusedTextField:FocuedTextField?
     @FocusedBinding(\.textValue) var focusedTextBinding
     
@@ -37,23 +37,21 @@ struct SignupView<PositionsLoader:UserPositionsLoading>: View {
             ScrollView {
                 VStack(spacing: 16) {
                     BorderedTextInputView(text: $viewModel.nameString, validationType: .name(prompt: "Your name"))
-//                        .focusedValue(\.textValue, $focusedTextBinding)
-//                        .focused($focusedTextField, equals: .name)
-                        
-                    
+
                     BorderedTextInputView(text: $viewModel.emailString, validationType: .email)
-//                        .focused($focusedTextField, equals: .email)
-                    
+       
                     BorderedTextInputView(text: $viewModel.phoneNumberString, validationType: .phoneNumber)
-//                        .focused($focusedTextField, equals: .phone)
+
                 }
                 .padding()
                 
                 positionSelectionView
                 
+                uploadPhotoActionView
+              
+                Spacer(minLength: 60) //scroll view insets, pre iOS 17
             }
-                    
-            
+        
             Button("Sign up", action: {
                 viewModel.sendSignup()
             })
@@ -65,6 +63,33 @@ struct SignupView<PositionsLoader:UserPositionsLoading>: View {
         .onAppear{
             viewModel.onViewAppear()
         }
+        .sheet(item: $viewModel.imageSourceType, content: {type in
+
+            ImagePickerView(imageSource: type, imageSelected: $viewModel.selectedImage)
+        })
+        .confirmationDialog("Choose how you want to add a photo",
+                            isPresented: $viewModel.isImageSourceDialoguePresented,
+                            actions: {
+            Button(action: {
+                viewModel.selectSourceType(.camera)
+            }, label: {
+                Text("Camera")
+            })
+            
+            Button(action: {
+                viewModel.selectSourceType(.library)
+            }) {
+                Text("Gallery")
+            }
+        })
+        .alert(viewModel.alertInfo?.title ?? "Error",
+               isPresented: $viewModel.isAlertPresented, presenting: viewModel.alertInfo, actions: {alertInfo in
+            ForEach(alertInfo.actions) {action in
+                action.body
+            }
+        }, message: { alertInfo in
+            Text(alertInfo.message ?? "")
+        })
     }
     
     @ViewBuilder private var positionSelectionView: some View {
@@ -95,10 +120,31 @@ struct SignupView<PositionsLoader:UserPositionsLoading>: View {
             
         }
     }
+    
+    @ViewBuilder private var uploadPhotoActionView: some View {
+        RoundedRectangle(cornerRadius: 4.0, style: .circular)
+            .stroke(Color.secondaryInactive, lineWidth: 1.0)
+            .frame(height:56)
+            .overlay(content: {
+                HStack(content: {
+                    Text("Upload your photo")
+                        .body2TextStyle(secondary: true)
+                    Spacer()
+                    Button(action: {
+                        viewModel.startPhotoSelection()
+                    }, label: {
+                        Text("Upload")
+                    })
+                    .buttonStyle(.secondaryButtonStyle)
+                })
+                .padding(.horizontal)
+            })
+            .padding(.horizontal)
+    }
 }
 
 #Preview {
 //    SignupView(viewModel: SignupViewModel<UserPositionsLoader>(userPositionsLoader: UserPositionsLoader()))
     
-    SignupView(viewModel: SignupViewModel(userPositionsLoader: UserPositionsDummy()))
+    SignupView(viewModel: SignupViewModel(userPositionsLoader: UserPositionsDummy(), cameraAccessHandler: CameraAccessPermissionsDummy()))
 }

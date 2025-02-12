@@ -37,7 +37,7 @@ struct TabBarContainer<Content>: View where Content:View {
         UsersListView(viewModel: UsersListViewModel(loader: UsersLoader(), pageItemsCount: 6, profilePhotoCache: ImageCache.shared))
             .customTabBarItem(.users, selection: .constant(.users))
         
-        SignupView(viewModel: SignupViewModel(userPositionsLoader: UserPositionsLoader()))
+        SignupView(viewModel: SignupViewModel(userPositionsLoader: UserPositionsLoader(), cameraAccessHandler: CameraAccessPermissionsDummy()))
             .customTabBarItem(.signup, selection: .constant(.signup))
     })
 }

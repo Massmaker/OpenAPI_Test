@@ -277,6 +277,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TestTask/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Test Task";
+				INFOPLIST_KEY_NSCameraUsageDescription = "App uses camera to take picture for profile photo";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "App uses photo for user profile registration";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = Launch_Screen;
@@ -309,6 +311,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TestTask/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Test Task";
+				INFOPLIST_KEY_NSCameraUsageDescription = "App uses camera to take picture for profile photo";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "App uses photo for user profile registration";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = Launch_Screen;

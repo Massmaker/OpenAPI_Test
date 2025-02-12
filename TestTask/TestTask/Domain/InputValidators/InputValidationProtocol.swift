@@ -25,5 +25,6 @@ protocol PhoneNumberValidating: StringInputValidation {}
 
 
 //MARK: - photo jpeg data validation
+import UIKit
 /// - Important: validation should take image data previously converted to JPEG format
-protocol ProfileImageValidating: InputValidation where Input == Data {}
+protocol ProfileImageValidating: InputValidation where Input == UIImage {}
