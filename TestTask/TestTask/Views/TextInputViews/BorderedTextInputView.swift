@@ -9,7 +9,7 @@ import SwiftUI
 
 enum TextValidationType {
     case validationDisabled(prompt:String?)
-    case name
+    case name(prompt:String? = nil)
     case email
     case phoneNumber
 }
@@ -22,7 +22,6 @@ struct BorderedTextInputView: View {
     @Binding var text:String
     
     @State private var pText:String
-    
     private let validationType:TextValidationType
     
     
@@ -36,33 +35,30 @@ struct BorderedTextInputView: View {
     var body: some View {
         
         textField
-            .roundedBorderFocusedView()
-        .frame(height:50)
-        
-        .onChange(of: pText, perform: {newValue in
-            text = newValue
-        })
+            
+            .frame(height:50)
+            .onChange(of: pText, perform: {newValue in
+                text = newValue
+            })
        
     }
     
     @ViewBuilder private var textField: some View {
-      
-            switch validationType {
-            case .name:
-                TextField("Your name", text: $pText)
-                    .validatingUserName($pText)
-            case .email:
-                TextField("Email", text: $pText)
-                    .validatingEmail($pText)
-            case .phoneNumber:
-                TextField("Phone", text: $pText)
-                    .validatingPhoneNumber($pText)
-            case .validationDisabled(let prompt):
-                TextField(prompt ?? "", text: $pText)
-                    .modifier(TextInputValidationModifier(validation: {_ in return true}, text: $pText))
-            }
-        
-        
+        switch validationType {
+        case .name(let prompt):
+            TextField(prompt ?? "", text: $pText)
+                .validatingUserName($pText)
+        case .email:
+            TextField("Email", text: $pText)
+                .validatingEmail($pText)
+        case .phoneNumber:
+            TextField("Phone", text: $pText)
+                .validatingPhoneNumber($pText)
+        case .validationDisabled(let prompt):
+            TextField(prompt ?? "", text: $pText)
+                .validationDisabled(for: $pText)
+                
+        }
     }
 }
 

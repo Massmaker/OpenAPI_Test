@@ -8,89 +8,50 @@
 import Foundation
 import SwiftUI
 
-struct TextInputValidationModifier:ViewModifier {
-    
-    let validation:(String) -> Bool
+fileprivate struct InputExternalValidatorModifier<Validator:StringInputValidation>:ViewModifier {
+    let validator:Validator
     @Binding var text:String
+    @FocusState private var isFocused:Bool
     
-    func body(content:Content) -> some View {
+    func body(content: Content) -> some View {
         ZStack {
-            let isValid = validation(text)
+            let isValid = isFocused ? true : validator.validate(text)
             
             RoundedRectangle(cornerRadius: 4, style: RoundedCornerStyle.circular)
-                    .stroke( isValid ? Color.buttonSecondaryInactive : Color.errorItem , lineWidth: 1)
+                .stroke(isFocused ? Color.secondaryColor : (isValid ? Color.buttonSecondaryInactive : Color.errorItem) , lineWidth: 1)
             
             content
+                .focused($isFocused)
                 .foregroundStyle(isValid ? Color.primary : Color.errorItem)
                 .padding(.horizontal)
                 
         }
-        
+    }
+}
+
+fileprivate extension View {
+    func validate(with validator: some StringInputValidation, text:Binding<String>) -> some View {
+        modifier(InputExternalValidatorModifier(validator: validator, text: text))
     }
 }
 
 
-fileprivate extension TextField {
-    func validatedWith(_ validator: @escaping (String) -> Bool, text: Binding<String>) -> some View {
-        modifier(TextInputValidationModifier(validation: validator, text: text))
-    }
-}
-
-/// Email regex taken from https://regexr.com/2rhq7
-fileprivate let kEmailRegex:String = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
-
-fileprivate let kPhoneNumberRegex:String = "^\\s*(?:\\+?(\\d{1,3}))?([-. (]*(\\d{3})[-. )]*)?((\\d{3})[-. ]*(\\d{2,4})(?:[-.x ]*(\\d+))?)\\s*$"
-
-let kImageDataSizeMaxValue:Int = 5_242_880 //5MegaBytes
-
-extension TextField {
+extension View {
     /// validating input text after putting it to the lower case
     func validatingEmail(_ text:Binding<String>) -> some View {
-        validatedWith({input in
-            input.lowercased().matchesRegex(kEmailRegex)
-        }, text: text)
+        validate(with: EmailStringValidator(), text: text)
     }
     
     func validatingPhoneNumber(_ text:Binding<String>) -> some View {
-        validatedWith({ input in
-            input.matchesRegex(kPhoneNumberRegex)
-        }, text: text)
+        validate(with: PhoneNumberValidator(), text: text)
     }
     
     func validatingUserName(_ text:Binding<String>) -> some View {
-        validatedWith({ input in
-            input.count > 1 && input.count < 61
-        }, text: text)
+        validate(with: UserNameValidator(), text: text)
     }
-}
-
-
-//MARK: - Focused TextField modifier
-
-struct FocusedTextFieldModifier:ViewModifier {
     
-    @Environment(\.isFocused) private var isViewFocused
-    
-    func body(content:Content) -> some View {
-        if isViewFocused {
-            ZStack {
-                RoundedRectangle(cornerRadius: 4, style: RoundedCornerStyle.circular)
-                    .stroke( Color.secondaryColor, lineWidth: 1)
-                
-                content
-                    .foregroundStyle(Color.primary)
-                    .padding(.horizontal)
-                    
-            }
-        }
-        else {
-            content
-        }
+    func validationDisabled(for text:Binding<String>) -> some View {
+        validate(with: AlwaysSucceedingStringValidator(), text: text)
     }
 }
 
-extension View {
-    func roundedBorderFocusedView() -> some View {
-        modifier(FocusedTextFieldModifier())
-    }
-}

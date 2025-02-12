@@ -36,7 +36,7 @@ struct SignupView<PositionsLoader:UserPositionsLoading>: View {
             HeaderView(title: "Working with POST request")
             ScrollView {
                 VStack(spacing: 16) {
-                    BorderedTextInputView(text: $viewModel.nameString, validationType: .name)
+                    BorderedTextInputView(text: $viewModel.nameString, validationType: .name(prompt: "Your name"))
 //                        .focusedValue(\.textValue, $focusedTextBinding)
 //                        .focused($focusedTextField, equals: .name)
                         
