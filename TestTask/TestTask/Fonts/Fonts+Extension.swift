@@ -15,7 +15,8 @@ import SwiftUI
 
 extension Font {
     static let regularButton:Font = Font(UIFont(name: "NunitoSans-Regular", size: 18)!)
-    static let regulatText:Font = Font(UIFont(name: "NunitoSans-Regular", size: 20)!)
+    static let regularText:Font = Font(UIFont(name: "NunitoSans-Regular", size: 20)!)
+    static let subtitleTextFont:Font = Font(UIFont(name: .regularFontName, size: 14)!)
 }
 
 

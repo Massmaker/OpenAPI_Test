@@ -13,7 +13,7 @@ struct EmptyUsersListView: View {
             Image("state_empty")
                 
             Text("There are no users yet")
-                .font(.regulatText)
+                .font(.regularText)
         }
     }
 }

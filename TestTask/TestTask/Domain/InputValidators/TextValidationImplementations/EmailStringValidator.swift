@@ -13,6 +13,12 @@ fileprivate let kEmailPattern:String = "^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a
 
 struct EmailStringValidator: EmailStringValidating {
     func validate(_ email: String) -> Bool {
-        email.matchesRegex(kEmailPattern)
+        let charsCount = email.count
+        guard charsCount > 5,
+              charsCount < 100 else {
+            return false
+        }
+        
+        return email.matchesRegex(kEmailPattern)
     }
 }

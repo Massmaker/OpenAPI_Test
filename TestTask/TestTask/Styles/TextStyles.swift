@@ -17,6 +17,7 @@ struct TextBodyModifier:ViewModifier {
     let font:UIFont
     var lineHeight:CGFloat = 0
     let secondary:Bool
+    var error:Bool = false
     
     @Environment(\.colorScheme) private var colorScheme
     
@@ -36,11 +37,16 @@ struct TextBodyModifier:ViewModifier {
     }
     
     private var textColor:Color {
-        if case .light = colorScheme {
-            Color.black
+        if error {
+            Color.errorItem
         }
         else {
-            Color.white
+            if case .light = colorScheme {
+                Color.black
+            }
+            else {
+                Color.white
+            }
         }
     }
 }
@@ -60,5 +66,13 @@ extension View {
     
     func body3TextStyle(secondary:Bool = false) -> some View {
         modifier(TextBodyModifier(font: .mainFont(size: 18), lineHeight:20, secondary: secondary))
+    }
+    
+    func subtitleTextInputStyle(secondary:Bool = false) -> some View {
+        modifier(TextBodyModifier(font: .mainFont(size: 16), lineHeight:16, secondary: secondary))
+    }
+    
+    func subtitleErrorTextStyle() -> some View {
+        modifier(TextBodyModifier(font: .mainFont(size: 16), lineHeight:16, secondary:false, error:true))
     }
 }
