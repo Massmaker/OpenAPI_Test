@@ -20,8 +20,8 @@ protocol InputValidation {
 protocol StringInputValidation: InputValidation where Input == String {}
 
 protocol UserNameValidating: StringInputValidation {}
-protocol EmailStringValidating: StringInputValidation {}
-protocol PhoneNumberValidating: StringInputValidation {}
+protocol EmailStringValidating: StringInputValidation where Input == EmailString {}
+protocol PhoneNumberValidating: StringInputValidation where Input == PhoneNumber {}
 
 
 //MARK: - photo jpeg data validation

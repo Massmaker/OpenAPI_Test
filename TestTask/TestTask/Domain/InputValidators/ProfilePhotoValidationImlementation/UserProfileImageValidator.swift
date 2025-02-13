@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-let kImageDataSizeMaxValue:Int = 5_242_880 //5MegaBytes
+let kImageDataSizeMaxValue:Int = 5_242_880 // 5MegaBytes
 class UserProfileImageValidator: ProfileImageValidating {
     
     func validate(_ image: UIImage) -> Bool {
@@ -18,7 +18,7 @@ class UserProfileImageValidator: ProfileImageValidating {
         }
         
         // filesize should be less than 5 MB
-        guard jpegImageData.count >= kImageDataSizeMaxValue else {
+        guard jpegImageData.count <= kImageDataSizeMaxValue else {
             return false
         }
 

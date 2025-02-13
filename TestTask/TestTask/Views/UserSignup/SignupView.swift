@@ -36,12 +36,29 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
             HeaderView(title: "Working with POST request")
             ScrollView {
                 VStack(spacing: 16) {
-                    BorderedTextInputView(text: $viewModel.nameString, validationType: .name(prompt: "Your name"))
-
-                    BorderedTextInputView(text: $viewModel.emailString, validationType: .email)
-       
-                    BorderedTextInputView(text: $viewModel.phoneNumberString, validationType: .phoneNumber)
-
+                   
+                    TextInputField("Your name",
+                                   text: $viewModel.nameString,
+                                   isValid: $viewModel.isUserNameValid)
+                        .isMandatory()
+                        .onTextInputValidation(viewModel.userNameValidation)
+                        .textInputAutocapitalization(.words)
+                        
+                    TextInputField("Email",
+                                   text: $viewModel.emailString,
+                                   isValid: $viewModel.isUserEmailValid)
+                        .isMandatory()
+                        .onTextInputValidation(viewModel.emailValidation)
+                        .keyboardType(.emailAddress)
+                        .textInputAutocapitalization(.never)
+                    
+                    TextInputField("Phone",
+                                   text: $viewModel.phoneNumberString,
+                                   hint:"+38 (XXX) XXX - XX - XX",
+                                   isValid: $viewModel.isUserPhoneNumberValid)
+                        .isMandatory()
+                        .onTextInputValidation(viewModel.phoneNumberValidation)
+                        .textInputAutocapitalization(.never)
                 }
                 .padding()
                 
@@ -56,7 +73,7 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
                 viewModel.sendSignup()
             })
             .buttonStyle(.primaryButtonStyle)
-            .disabled(!viewModel.isSignupEnabled)
+            .disabled(!viewModel.isRegistrationAvailable)
             .padding(.bottom, 8)
             
         }

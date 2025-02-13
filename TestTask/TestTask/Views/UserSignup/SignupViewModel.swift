@@ -18,9 +18,13 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
     @Published var positionLoadingIsError:Bool = false
     @Published private(set) var isLoadingUserPositions:Bool = false
     @Published var nameString:String = ""
-    @Published var emailString:String = ""
-    @Published var phoneNumberString:String = ""
-    @Published private(set) var isSignupEnabled:Bool = false
+    @Published var emailString:EmailString = ""
+    @Published var phoneNumberString:PhoneNumber = ""
+    
+    @Published var isUserNameValid:Bool = false
+    @Published var isUserEmailValid:Bool = false
+    @Published var isUserPhoneNumberValid:Bool = false
+    @Published var isRegistrationAvailable:Bool = false
     
     @Published var isImageSourceDialoguePresented:Bool = false
     
@@ -57,8 +61,9 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
     }
     
     //private var imageSourceTypeSelectionSUbscription:AnyCancellable?
+    private var cancellables:Set<AnyCancellable> = []
+    private lazy var profileImageDataCurrentValue:CurrentValueSubject<Data?, Never> = .init(nil)
     
-    private var profileImageData:Data?
     
     private let userPositionsLoader:PositionsLoader
     private let cameraPermissionsHandler:CameraPermissionsChecker
@@ -92,6 +97,48 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
             self.isLoadingUserPositions = false
             
         }
+        
+        
+        let roleSelectionValidPublisher = $selectedPosition
+            .map {
+                let isRoleSelected:Bool = $0 != nil
+                
+                return isRoleSelected
+            }
+            .eraseToAnyPublisher()
+            
+        
+        let imageDataValidPublisher = profileImageDataCurrentValue
+            .map {
+                return $0 != nil
+            }
+            .eraseToAnyPublisher()
+            
+        let textInputPublishers =
+        Publishers.CombineLatest3($isUserNameValid.eraseToAnyPublisher(),
+                                  $isUserEmailValid.eraseToAnyPublisher(),
+                                  $isUserPhoneNumberValid.eraseToAnyPublisher())
+        .map{
+            $0 && $1 && $2
+        }
+        .eraseToAnyPublisher()
+        
+       
+        
+        let registrationPublisher =
+        Publishers.CombineLatest3(roleSelectionValidPublisher, imageDataValidPublisher, textInputPublishers)
+            .map{
+                $0 && $1 && $2
+            }
+            .eraseToAnyPublisher()
+        
+        
+        registrationPublisher
+            .removeDuplicates()
+            .sink(receiveValue: {[unowned self] isAvailable in
+                self.isRegistrationAvailable = isAvailable
+            })
+            .store(in: &cancellables)
     }
     
     //MARK: - UI Actions
@@ -162,14 +209,63 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
     }
     
     //MARK: -
+    func userNameValidation(_ name:String) -> Result<Bool, TextInputValidationError> {
+        
+        if name.isEmpty {
+            return .failure(.invalidName(message:"Required field"))
+        }
+        
+        let isValid = UserNameValidator().validate(name)
+        
+        if isValid {
+            return .success(true)
+        }
+        else {
+            return .failure(TextInputValidationError.invalidName(message: "Invalid name"))
+        }
+    }
+    
+    func emailValidation(_ email:EmailString) -> Result<Bool, TextInputValidationError> {
+        
+        if email.isEmpty {
+            return .failure(.invalidName(message:"Required field"))
+        }
+        
+        let isEmailValid = EmailStringValidator().validate(email)
+        
+        if isEmailValid {
+            return .success(true)
+        }
+        else {
+            return .failure(TextInputValidationError.invalidName(message: "Invalid email format"))
+        }
+    }
+    
+    func phoneNumberValidation(_ phone:PhoneNumber) -> Result<Bool, TextInputValidationError> {
+        if phone.isEmpty {
+            return.failure(.invalidName(message:"Required field"))
+        }
+        
+        let isPhoneValid = PhoneNumberValidator().validate(phone)
+        
+        if isPhoneValid {
+            return .success(true)
+        }
+        else {
+            return .failure(TextInputValidationError.invalidName(message: "Invalid phone nmber format"))
+        }
+    }
+    
+    //MARK: -
     private func processImage(_ image:UIImage) {
         let validator = UserProfileImageValidator()
         let isValid = validator.validate(image)
-        if isValid {
-            self.profileImageData = image.jpegData(compressionQuality: 1.0)
+        
+        if isValid, let imageData = image.jpegData(compressionQuality: 1.0) {
+            self.profileImageDataCurrentValue.send(imageData)
         }
         else {
-            self.profileImageData = nil
+            self.profileImageDataCurrentValue.send(nil)
         }
         
         //cleanup

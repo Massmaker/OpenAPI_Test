@@ -92,7 +92,7 @@ struct ImagePickerView:UIViewControllerRepresentable {
 
             if let edited = info[.editedImage] as? UIImage {
                 if let original = info[.originalImage] as? UIImage {
-                    if let origData = original.jpegData(compressionQuality: 1) {
+                    if let origData = original.jpegData(compressionQuality: 1.0) {
                         print("Original: \(origData.count) Bytes")
                     }
                 }

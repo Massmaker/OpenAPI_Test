@@ -16,7 +16,7 @@ struct PrimaryButtonStyle:ButtonStyle {
     func makeBody(configuration:ButtonStyle.Configuration) -> some View {
         configuration.label
             .font(.regularButton)
-            .foregroundColor( isEnabled ? ( scheme == .light ? .black : .white) : Color("Button_disabled_text"))
+            .foregroundColor( isEnabled ? ( scheme == .light ? .black : .white) : Color.inactiveText)
             .padding(10)
             .padding(.horizontal, 18)
             .background(RoundedRectangle(cornerRadius: 24)
@@ -40,7 +40,7 @@ struct SecondaryButtonStyle:ButtonStyle {
     func makeBody(configuration:ButtonStyle.Configuration) -> some View {
         configuration.label
             .font(.regularButton)
-            .foregroundColor( isEnabled ? Color.secondaryColor : Color("Button_disabled_text"))
+            .foregroundColor( isEnabled ? Color.secondaryColor : Color.inactiveText)
             .padding(10)
             .padding(.horizontal, 18)
             .background(RoundedRectangle(cornerRadius: 24)
