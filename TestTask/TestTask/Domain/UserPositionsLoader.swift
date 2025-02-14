@@ -14,26 +14,19 @@ protocol UserPositionsLoading {
 
 final class UserPositionsLoader:UserPositionsLoading {
     
-    let session:URLSession
+    private let session:URLSession
     private lazy var decoder = JSONDecoder()
     
-    init() {
-        self.session = URLSession(configuration: .ephemeral)
+    init(session: URLSession) {
+        self.session = session
     }
     
     func getUserPositions() async throws -> [UserPosition] {
         
         let getPositionsAPI = API.getPositions
+        let request = try GetRequestsBuilder.buildRequestFor(api: getPositionsAPI)
         
-        let getURLString = getPositionsAPI.requestURL()
-        
-        guard let url = URL(string: getURLString) else {
-            throw URLError(.badURL)
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = getPositionsAPI.method
-        
+       
         do {
             let response = try await session.data(for: request)
             
@@ -54,7 +47,7 @@ final class UserPositionsLoader:UserPositionsLoading {
                 //try to obtain server error message
                 if let decodableFailure = try? decoder.decode(UserPositionsFailureResponse.self, from: responseData),
                    let errorMessage = decodableFailure.message {
-                    throw APICallError.reasonableMessage(errorMessage)
+                    throw APICallError.reasonableMessage(errorMessage, HandledErrorStatusCode(rawValue: statusCode))
                 }
                 else {
                     throw URLError(.badServerResponse)
@@ -73,7 +66,7 @@ final class UserPositionsLoader:UserPositionsLoading {
             
         }
         catch {
-            // URLSession error
+            // session (URLSession) error
             throw error
         }
     }

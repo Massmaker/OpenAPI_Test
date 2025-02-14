@@ -66,9 +66,12 @@ final class UsersListViewModel<Loader, AvatarCache:DataForURLCache>:ObservableOb
     
     func onViewAppear() {
         if users.isEmpty {
-//            let response = try await usersSource.loadPage(after: currentPage, size: pageSize)
-            currentPage = PageInfo(hasNext: true, nextCursor: API.getUsers(page: 1, size: pageSize).requestURL())
+
+            currentPage = PageInfo(hasNext: true, nextCursor: API.getUsers(page: 1, size: pageSize)
+                .requestPath())
+            
             loadingState = .loadingFirstPage
+            
             currentTask = Task {
                 await loadMoreUsers()
             }
@@ -174,8 +177,17 @@ final class UsersListViewModel<Loader, AvatarCache:DataForURLCache>:ObservableOb
                 }
             
         }
-        catch {
-            
+        catch (let error){
+            if let apiError = error as? APICallError {
+                if case .reasonableMessage(let string, let handledErrorStatusCode) = apiError {
+                    if case .notFound = handledErrorStatusCode {
+                        currentPage = PageInfo(hasNext: false, nextCursor: nil)
+                        DispatchQueue.main.async {[unowned self] in
+                            loadingState = .idle
+                        }
+                    }
+                }
+            }
         }
     }
     
