@@ -10,8 +10,10 @@ import UIKit
 import Combine
 
 
+fileprivate let logger = createLogger(subsystem: "Screen_ViewModels", category: "SignupViewModel")
+
 @MainActor
-final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker:CameraAccessPermissionsHandling>: ObservableObject {
+final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker:CameraAccessPermissionsHandling, Registrator:UserRegistration>: ObservableObject {
     
     @Published var selectedPosition:UserPosition?
     @Published private(set) var availablePositions:[UserPosition] = []
@@ -29,6 +31,9 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
     @Published var isImageSourceDialoguePresented:Bool = false
     
     @Published var imageSourceType:ImageSourceType?
+    @Published private(set) var isRegistrationInProgress:Bool = false
+    
+    @Published var signupResult:UserSignupResult?
     
     var alertInfo:AlertInfo? {
         didSet {
@@ -62,18 +67,24 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
     
     //private var imageSourceTypeSelectionSUbscription:AnyCancellable?
     private var cancellables:Set<AnyCancellable> = []
-    private lazy var profileImageDataCurrentValue:CurrentValueSubject<Data?, Never> = .init(nil)
+    private lazy var profileImageDataCurrentValue: CurrentValueSubject<Data?, Never> = .init(nil)
     
+    private var pendingRegistrationTask: AnyCancellable? //here is a Task<(userId: UserId, message: String), any Error>
     
-    private let userPositionsLoader:PositionsLoader
-    private let cameraPermissionsHandler:CameraPermissionsChecker
+    private let userPositionsLoader: PositionsLoader
+    private let cameraPermissionsHandler: CameraPermissionsChecker
+    private let userRegistrator: Registrator
     
-    init(selectedPosition: UserPosition? = nil, availablePositions: [UserPosition] = [], userPositionsLoader: PositionsLoader, cameraAccessHandler:CameraPermissionsChecker) {
+    init(selectedPosition: UserPosition? = nil,
+         availablePositions: [UserPosition] = [],
+         userPositionsLoader: PositionsLoader,
+         cameraAccessHandler: CameraPermissionsChecker,
+         userRegistrator registrator:Registrator) {
         self.selectedPosition = selectedPosition
         self.availablePositions = availablePositions
         self.userPositionsLoader = userPositionsLoader
-        
         self.cameraPermissionsHandler = cameraAccessHandler
+        self.userRegistrator = registrator
     }
     
     private func loadUserPositions() {
@@ -205,7 +216,65 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
     }
     
     func sendSignup() {
+        if isRegistrationInProgress {
+            return
+        }
         
+        guard let selectedPosition else {
+            return
+        }
+        
+        guard let imageData:Data = self.profileImageDataCurrentValue.value else {
+            return
+        }
+        
+        let name = self.nameString
+        let position = selectedPosition.id
+        let email = self.emailString
+        let phone = self.phoneNumberString
+        
+        isRegistrationInProgress = true
+        
+        let task:Task<Void, Never> =
+        Task{[name, position, email, phone, imageData, unowned self] in
+            do {
+                let registrationSuccess = try await self.userRegistrator.registerNew(user: UserRegistrationRequestInfo(name: name, email: email, phone: phone, positionId: position, photo: imageData))
+                
+                if Task.isCancelled {
+                    return
+                }
+                
+                let userId = registrationSuccess.userId
+                let message = registrationSuccess.message
+
+                isRegistrationInProgress = false
+                
+                signupResult = UserSignupResult(success: true,
+                                                message: "User successfully registered",
+                                                action: (title:"Got it", work:{[unowned self] in
+                    signupResult = nil
+                }))
+            }
+            catch(let error) {
+                //handle registration attempt failure
+                isRegistrationInProgress = false
+                
+                if let apiError = error as? APICallError {
+                    handleApiCallError(apiError)
+                }
+                else {
+                    signupResult = UserSignupResult(success: false, message: "Registration failed", action: (title:"Got it", work:{[unowned self] in
+                        self.signupResult = nil
+                    }))
+                }
+            }
+        }
+        
+    }
+    
+    
+    func justDismissResultView() {
+        signupResult = nil
     }
     
     //MARK: -
@@ -283,6 +352,75 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
             self.alertInfo = AlertInfo(title: title, message: message, actions: [dismissAction])
         }
     }
+    
+    //MARK: Sugnup resulr failures:
+    
+    private func handleApiCallError(_ apiError:APICallError) {
+        
+        if case .reasonableMessage(let string, let codeOrNil) = apiError {
+            if let errorCode = codeOrNil {
+                
+                handleSignupCode(code: errorCode, message:string)
+                
+            }
+            else {
+                //Try again
+                signupResult = UserSignupResult(success: false,
+                                                message: string,
+                                                action: (title:"Try again", work:{[unowned self] in
+                    self.signupResult = nil
+                    self.sendSignup()
+                }))
+            }
+        }
+        
+        if case .detailedError(let failureResponse, let codeOrNil) = apiError {
+            logger.error("Message: \(failureResponse.message ?? "–"),\nDetails: \"\(String(describing:(failureResponse.fails)))\" ")
+            
+            signupResult = UserSignupResult(success: false,
+                                            message: "\(failureResponse.message ?? "Validation errors")",
+                                            action: (title:"Got it", work:{[unowned self] in
+                self.signupResult = nil
+            }))
+            
+        }
+    }
+    
+    private func handleSignupCode(code:HandledErrorStatusCode, message:String) {
+        switch code {
+        case .expiredToken:
+            //Try again
+            signupResult = UserSignupResult(success: false,
+                                            message: message,
+                                            action: (title:"Try again", work:{[unowned self] in
+                self.signupResult = nil
+                self.sendSignup()
+            }))
+        case .duplicateData:
+            signupResult = UserSignupResult(success: false,
+                                            message: message,
+                                            action: (title:"Ok", work:{[unowned self] in
+                self.signupResult = nil
+            }))
+        case .validationFailure:
+            signupResult = UserSignupResult(success: false,
+                                            message: "Validation Errors",
+                                            action: (title:"Ok", work:{[unowned self] in
+                self.signupResult = nil
+            }))
+        case .notFound:
+            signupResult = UserSignupResult(success: false,
+                                            message: "User Registrarion failed",
+                                            action: (title:"Ok", work:{[unowned self] in
+                self.signupResult = nil
+            }))
+        }
+    }
 }
 
 
+extension Task {
+    func eraseToAnyCancellable() -> AnyCancellable {
+        AnyCancellable(cancel)
+    }
+}

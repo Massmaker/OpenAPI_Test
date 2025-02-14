@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 import AVFoundation
-
+import UIKit
 
 protocol CameraAccessPermissionsHandling {
     func checkCameraAccessPermissions() async throws
@@ -29,6 +29,14 @@ final class CameraUsagePermissionsHandler:CameraAccessPermissionsHandling {
         #if targetEnvironment(simulator)
         throw CameraAccessError.unsupported
         #endif
+        
+        let isFrontCameraAvailable =  await UIImagePickerController.isCameraDeviceAvailable(UIImagePickerController.CameraDevice.front)
+        
+        let isRearCameraAvailable = await UIImagePickerController.isCameraDeviceAvailable(UIImagePickerController.CameraDevice.rear)
+        
+        guard isRearCameraAvailable || isFrontCameraAvailable else {
+            throw CameraAccessError.unsupported
+        }
         
         let status = AVCaptureDevice.authorizationStatus(for: AVMediaType.video)
         

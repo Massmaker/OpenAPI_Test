@@ -22,7 +22,7 @@ extension UserUIInfo : Identifiable {
 
 extension UserUIInfo {
     var registrationTimestamp:TimeInterval {
-        user.registrationTimestamp
+        user.registrationTimestamp ?? 0
     }
 
     var name:String {

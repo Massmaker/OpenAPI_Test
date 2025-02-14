@@ -21,7 +21,7 @@ struct User:Decodable, Hashable, Identifiable {
     let position:String
     let positionId:UserPositionId
     var photo:UserPhotoLink?
-    var registrationTimestamp:TimeInterval
+    var registrationTimestamp:TimeInterval?
 }
 
 

@@ -25,9 +25,9 @@ extension FocusedValues {
   }
 }
 
-struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker:CameraAccessPermissionsHandling>: View {
+struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker:CameraAccessPermissionsHandling, Reg:UserRegistration>: View {
     
-    @ObservedObject var viewModel:SignupViewModel<PositionsLoader, CameraPermissionsChecker>
+    @ObservedObject var viewModel:SignupViewModel<PositionsLoader, CameraPermissionsChecker, Reg>
 //    @FocusState private var focusedTextField:FocuedTextField?
     @FocusedBinding(\.textValue) var focusedTextBinding
     
@@ -77,6 +77,17 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
             .padding(.bottom, 8)
             
         }
+        .overlay(content: {
+            if viewModel.isRegistrationInProgress {
+                ProgressView("Registering...")
+                    .progressViewStyle(.circular)
+                    .foregroundStyle(.secondary)
+                    .padding(36)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .circular))
+            }
+            
+        })
         .onAppear{
             viewModel.onViewAppear()
         }
@@ -106,6 +117,14 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
             }
         }, message: { alertInfo in
             Text(alertInfo.message ?? "")
+        })
+        .fullScreenCover(item: $viewModel.signupResult,
+                         onDismiss: {
+            
+        }, content: {signupResult in
+            ResultStateView(success: signupResult.success, message: signupResult.message, actionTitle: signupResult.action.title, primaryAtion: signupResult.action.work, closeAction: {
+                viewModel.justDismissResultView()
+            })
         })
     }
     
@@ -163,5 +182,5 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
 #Preview {
 //    SignupView(viewModel: SignupViewModel<UserPositionsLoader>(userPositionsLoader: UserPositionsLoader()))
     
-    SignupView(viewModel: SignupViewModel(userPositionsLoader: UserPositionsDummy(), cameraAccessHandler: CameraAccessPermissionsDummy()))
+    SignupView(viewModel: SignupViewModel(userPositionsLoader: UserPositionsDummy(), cameraAccessHandler: CameraAccessPermissionsDummy(), userRegistrator: UserRegistrationDummy(succeeding: false)))
 }

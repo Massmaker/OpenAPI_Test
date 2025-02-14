@@ -8,7 +8,14 @@
 import Foundation
 
 enum APICallError:Error {
-    case validationFailed
-    case reasonableMessage(String)
+    case validationFailed(HandledErrorStatusCode?)
+    case reasonableMessage(String, HandledErrorStatusCode?)
+    case detailedError(FailureResponse, HandledErrorStatusCode?)
 }
 
+enum HandledErrorStatusCode:Int {
+    case expiredToken = 401
+    case notFound = 404
+    case duplicateData = 409
+    case validationFailure = 422
+}

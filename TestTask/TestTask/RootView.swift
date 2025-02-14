@@ -16,6 +16,7 @@ struct RootView: View {
     
     var body: some View {
         TabBarContainer(selection: $selectedTab, content: {
+            
             if selectedTab == .users {
                 UsersListView(viewModel: rootModel.usersListViewModel)
                     .customTabBarItem(.users, selection: $selectedTab)
