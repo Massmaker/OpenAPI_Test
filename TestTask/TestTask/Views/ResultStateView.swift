@@ -19,7 +19,7 @@ struct ResultStateView: View {
         VStack(spacing: 20) {
             Spacer()
             Image(success ? "state_success" : "state_failure")
-            Text(message).font(.regulatText)
+            Text(message).font(.regularText)
             Button(actionTitle, action: primaryAtion)
             .buttonStyle(.primaryButtonStyle)
             Spacer()

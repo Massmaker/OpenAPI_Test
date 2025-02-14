@@ -7,12 +7,17 @@
 
 import Foundation
 
+@MainActor
 final class RootModel:ObservableObject {
-    var usersListViewModel:UsersListViewModel
     
-    let imageCache = ImageCache()
+    let imageCache = ImageCache.shared
     
-    init() {
-        usersListViewModel = UsersListViewModel()
-    }
+    lazy var usersListViewModel:UsersListViewModel = UsersListViewModel(loader: UsersLoader(),
+                                                                        pageItemsCount: 6,
+                                                                        profilePhotoCache: ImageCache.shared)
+    
+    lazy var userSignupViewModel:SignupViewModel = SignupViewModel(userPositionsLoader: UserPositionsLoader(),
+                                                                   cameraAccessHandler: CameraUsagePermissionsHandler())
+    
+ 
 }
