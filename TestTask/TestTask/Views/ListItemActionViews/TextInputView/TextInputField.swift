@@ -5,6 +5,8 @@
 //  Created by Ivan_Tests on 13.02.2025.
 //
 
+
+
 import Foundation
 import SwiftUI
 
@@ -13,6 +15,11 @@ fileprivate let kTitleLabelVerticalOffset:CGFloat = -20.0
 fileprivate let kActiveTextFieldVerticalOffset:CGFloat = 8.0
 fileprivate let kSubtitleLabelVerticalOffset:CGFloat = 42.0
 
+///
+///The text input field more or less tightly hardcoded to implement the design in figma
+///
+/// - Note:  implementation ideas taken mostly from here:[Building REUSABLE SwiftUI components - Peter Friese | Swift Heroes 2023 Talk](https://www.youtube.com/watch?v=PocljzAYFL4&t=1678s)
+///
 struct TextInputField:View {
     private var title:String
     private var hint:String?

@@ -264,7 +264,7 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
         //let task:Task<Void, Never> =
         Task{[name, position, email, phone, imageData, unowned self] in
             do {
-                let registrationSuccess = try await self.userRegistrator.registerNew(user: UserRegistrationRequestInfo(name: name, email: email, phone: phone, positionId: position, photo: imageData))
+                let _ = try await self.userRegistrator.registerNew(user: UserRegistrationRequestInfo(name: name, email: email, phone: phone, positionId: position, photo: imageData))
                 
                 if Task.isCancelled {
                     return

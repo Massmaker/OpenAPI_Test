@@ -11,8 +11,13 @@ typealias UserId = Int
 typealias UserPositionId = Int
 typealias UserPhotoLink = String
 
-/// - Important: use keyDecodingStrategy `convertFromSnakeCase` for reteiving data and keyEncodingStartegy `convertToSnakeCase` for posting data
 
+
+
+/**
+ Decodable struct for retreiving/parsing data from the API responses
+  - Important: use keyDecodingStrategy `convertFromSnakeCase` for reteiving data and keyEncodingStartegy `convertToSnakeCase` for posting data
+ */
 struct User:Decodable, Hashable, Identifiable {
     let name: String
     let id: UserId

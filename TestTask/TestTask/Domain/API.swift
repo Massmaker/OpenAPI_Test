@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// The API uses Alamofire/Moya approach style (very simplified)
 enum API {
     case getUsers(page:Int, size:Int)
     case getPositions
@@ -16,6 +17,7 @@ enum API {
 }
 
 extension API {
+    
     var baseURL:String {
         "https://frontend-test-assignment-api.abz.agency/api/v1/"
     }
@@ -33,10 +35,6 @@ extension API {
         case .getUserBy(userId: let userId):
             "users/\(userId)"
         }
-    }
-    
-    func requestPath() -> String {
-        baseURL.appending(path)
     }
     
     var method:String {
@@ -67,4 +65,10 @@ extension API {
         }
     }
     
+}
+
+extension API {
+    func requestPath() -> String {
+        baseURL.appending(path)
+    }
 }
