@@ -9,6 +9,24 @@
         }
       },
       "idiom" : "universal"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "color" : {
+        "color-space" : "display-p3",
+        "components" : {
+          "alpha" : "0.382",
+          "blue" : "0.935",
+          "green" : "0.935",
+          "red" : "0.935"
+        }
+      },
+      "idiom" : "universal"
     }
   ],
   "info" : {

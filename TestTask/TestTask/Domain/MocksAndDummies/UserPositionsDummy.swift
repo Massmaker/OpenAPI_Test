@@ -22,6 +22,9 @@ final class UserPositionsDummy: UserPositionsLoading {
 extension UserPosition{
     static var dummies:[UserPosition] = [
         .init(id: 1, name: "Backend developer"),
-        .init(id: 2, name: "Frontend developer")
+        .init(id: 2, name: "Frontend developer"),
+        .init(id: 3, name: "Dev Ops"),
+        .init(id: 4, name: "UX UI designer"),
+        .init(id: 5, name: "Marketing manager")
     ]
 }

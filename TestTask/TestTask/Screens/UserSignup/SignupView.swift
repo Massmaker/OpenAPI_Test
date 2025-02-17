@@ -28,8 +28,8 @@ extension FocusedValues {
 struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker:CameraAccessPermissionsHandling, Reg:UserRegistration>: View {
     
     @ObservedObject var viewModel:SignupViewModel<PositionsLoader, CameraPermissionsChecker, Reg>
-//    @FocusState private var focusedTextField:FocuedTextField?
-    @FocusedBinding(\.textValue) var focusedTextBinding
+    @FocusState private var focusedTextField:FocuedTextField?
+    
     
     var body: some View {
     
@@ -46,6 +46,7 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
                         .isMandatory()
                         .onTextInputValidation(viewModel.userNameValidation)
                         .textInputAutocapitalization(.words)
+                        .focused($focusedTextField, equals: .name)
                         
                     TextInputField("Email",
                                    text: $viewModel.emailString,
@@ -54,6 +55,7 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
                         .onTextInputValidation(viewModel.emailValidation)
                         .keyboardType(.emailAddress)
                         .textInputAutocapitalization(.never)
+                        .focused($focusedTextField, equals: .email)
                     
                     TextInputField("Phone",
                                    text: $viewModel.phoneNumberString,
@@ -62,6 +64,7 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
                         .isMandatory()
                         .onTextInputValidation(viewModel.phoneNumberValidation)
                         .textInputAutocapitalization(.never)
+                        .focused($focusedTextField, equals: .phone)
                 }
                 .padding()
                 
@@ -70,16 +73,21 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
                 uploadPhotoActionView
                     .padding(.horizontal)
                 
-                Spacer(minLength: 60) //scroll view insets, pre iOS 17
+                Spacer(minLength: 64) //scroll view insets, pre iOS 17
             }
-        
-            Button("Sign up", action: {
-                viewModel.sendSignup()
-            })
-            .buttonStyle(.primaryButtonStyle)
-            .disabled(!viewModel.isRegistrationAvailable)
-            .padding(.bottom, 8)
-            
+            .overlay(alignment: .bottom) {
+                if let _ = focusedTextField {
+                    EmptyView()
+                }
+                else {
+                    Button("Sign up", action: {
+                        viewModel.sendSignup()
+                    })
+                    .buttonStyle(.primaryButtonStyle)
+                    .disabled(!viewModel.isRegistrationAvailable)
+                    .padding(.bottom, 8)
+                }
+            }
         }
         .overlay(content: {
             if viewModel.isRegistrationInProgress {
