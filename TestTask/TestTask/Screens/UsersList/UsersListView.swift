@@ -19,13 +19,27 @@ struct UsersListView: View {
                 EmptyUsersListView()
             }
             else {
-                List(viewModel.users) { userInfo in
-                    UserListCell(user:userInfo, avatarImage: userInfo.profileImage)
+                if #available(iOS 16.0, *) {
+                    List(viewModel.users) { userInfo in
+                        UserListCell(user:userInfo, avatarImage: userInfo.profileImage)
                             .id(userInfo.id)
                             .onAppear{ viewModel.onUserAppear(userInfo.id) // scrolling to bottom of the list detection}
+                            }
                     }
+                    .scrollIndicators(.hidden)
+                    .listStyle(.plain)
+                    .padding(.trailing, 16)
+                    
+                } else {
+                    List(viewModel.users) { userInfo in
+                        UserListCell(user:userInfo, avatarImage: userInfo.profileImage)
+                            .id(userInfo.id)
+                            .onAppear{ viewModel.onUserAppear(userInfo.id) // scrolling to bottom of the list detection}
+                            }
+                    }
+                    .listStyle(.plain)
                 }
-                .listStyle(.plain)
+                
             }
             
         }

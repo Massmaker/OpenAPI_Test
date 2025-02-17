@@ -65,7 +65,7 @@ extension View {
     }
     
     func body3TextStyle(secondary:Bool = false, error:Bool = false) -> some View {
-        modifier(TextBodyModifier(font: .mainFont(size: 18), lineHeight:20, secondary: secondary, error: error))
+        modifier(TextBodyModifier(font: .mainFont(size: 14), lineHeight:20, secondary: secondary, error: error))
     }
     
     func subtitleTextInputStyle(secondary:Bool = false) -> some View {
