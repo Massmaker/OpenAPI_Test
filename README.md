@@ -8,6 +8,8 @@ There will be some minor differences in UI for iOS 15 and 16+ because of the pre
 *Installation:*
 
 To run the project on iOS Simulator -> just pull or fork the repo and open in Xcode, press "Play" button.
+
 To run on the device use your dedicated Xcode setup for code signing.
 
-No 3rd party dependencies used
+*Dependencies*
+No 3rd party dependencies used. Only the frameworks available for developer in Xcode by default.
