@@ -19,8 +19,10 @@ struct PrimaryButtonStyle:ButtonStyle {
             .foregroundColor( isEnabled ? ( scheme == .light ? .black : .white) : Color.inactiveText)
             .padding(10)
             .padding(.horizontal, 18)
+            .frame(minWidth: 140, minHeight: 48)
             .background(RoundedRectangle(cornerRadius: 24)
                 .fill( isEnabled ? (configuration.isPressed ? Color.primaryActive : Color.primaryColor) : Color.disabledItem ))
+            
     }
     
 }

@@ -34,7 +34,7 @@ enum ImageSourceType:Identifiable {
 }
 
 
-//ImagePickerView uses UIImagePicker to browse photolibrary or to take a new photo. No PhotoKit stuff is used.
+///ImagePickerView uses UIImagePicker to browse photolibrary or to take a new photo. No PhotoKit stuff is used.
 struct ImagePickerView:UIViewControllerRepresentable {
     func makeCoordinator() -> Coordinator {
         return Self.Coordinator(parent: self)
@@ -89,9 +89,10 @@ struct ImagePickerView:UIViewControllerRepresentable {
                                     didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
 
             if let edited = info[.editedImage] as? UIImage {
+                //2 - User has finished image cropping( if needed )
                 
                 //delegate method called after user has edited image, – use edited image (probably cropped)
-                
+                #if DEBUG
                 if let original = info[.originalImage] as? UIImage {
                     if let origData = original.jpegData(compressionQuality: 1.0) {
                         print("Original: \(origData.count) Bytes")
@@ -101,14 +102,19 @@ struct ImagePickerView:UIViewControllerRepresentable {
                 if let editedData = edited.jpegData(compressionQuality: 1) {
                     print("Edited: \(editedData.count) Bytes")
                 }
+                #endif
                 
                 parent.setImage(edited)
                 return
             }
             
             guard let _ = info[.originalImage] else {
+                //no image selected
                 return
             }
+            
+            
+            //1 - User has selected an image -> Proceed to image cropping
             
             // delegate method called after user has taken a new photo, – start editing the image to allow user to crop an image if needed
             picker.setEditing(true, animated: true)

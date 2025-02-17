@@ -27,8 +27,12 @@ extension UsersLoader: Pageable  {
             throw URLError(.badURL)
         }
         
+        return try await loadUsersPageFrom(url: aURL)
+    }
+    
+    private func loadUsersPageFrom(url:URL) async throws -> (items:[Value], pageInfo:PageInfo) {
         do {
-            let response = try await URLSession.shared.data(from: aURL)
+            let response = try await URLSession.shared.data(from: url)
             
             guard let httpResponse = response.1 as? HTTPURLResponse else {
                 throw URLError(.badServerResponse)
@@ -65,8 +69,7 @@ extension UsersLoader: Pageable  {
         catch {
             throw error
         }
-        
-        
     }
     
 }
+

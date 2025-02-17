@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// Success or Failure result state view
 struct ResultStateView: View {
     let success:Bool
     let message:String

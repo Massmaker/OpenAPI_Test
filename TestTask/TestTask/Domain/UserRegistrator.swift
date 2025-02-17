@@ -6,11 +6,16 @@
 //
 
 import Foundation
+import Combine
 
 typealias AccessToken = String
 
 protocol UserRegistration {
     func registerNew(user:UserRegistrationRequestInfo) async throws -> (userId:UserId, message:String)
+}
+
+protocol RegisteredUserIdSource {
+    var registeredUserIdPublisher: any Publisher<UserId, Never> { get }
 }
 
 protocol AccessTokenSupplier {
@@ -19,7 +24,7 @@ protocol AccessTokenSupplier {
 
 fileprivate let logger = createLogger(subsystem: "Networking", category: "UserRegistrator")
 
-final class UserRegistrator:UserRegistration {
+final class UserRegistrator:UserRegistration, RegisteredUserIdSource {
     
     let tokenSupplier: any AccessTokenSupplier
     let session:URLSession
@@ -29,6 +34,23 @@ final class UserRegistrator:UserRegistration {
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         return decoder
     }()
+    
+    //MARK: RegisteredUserIdSource protocol conformance
+    
+    /// Internally initializes an optional PassThrough subject, that will publish new registered UserId (Int) on registration success response
+    var registeredUserIdPublisher: any Publisher<UserId, Never> {
+        if let existing = registeredUserIdSideEffectPassThrouth {
+            return existing
+        }
+        else  {
+            let new = PassthroughSubject<UserId, Never>()
+            self.registeredUserIdSideEffectPassThrouth = new
+            return new
+        }
+    }
+    //MARK: -
+    
+    private var registeredUserIdSideEffectPassThrouth:PassthroughSubject<UserId, Never>?
     
     init(tokenSupplier: some AccessTokenSupplier, session:URLSession) {
         self.tokenSupplier = tokenSupplier
@@ -92,19 +114,25 @@ final class UserRegistrator:UserRegistration {
                         throw APICallError.reasonableMessage("Registration Failed", nil)
                     }
                     
+                    //SUCCESS registering new User:
                     let userId = registrationResponse.userId
                     
+                    
+                    //send side effect if any subscription was done to it
+                    self.registeredUserIdSideEffectPassThrouth?.send(userId)
+                    
+                    // finally return the received response values
                     if let message = registrationResponse.message {
                         return (userId:userId, message:message)
                     }
                     else {
                         return (userId:userId, message:"")
                     }
+                    
                 }
                 catch(let responseDecodingError) {
                     throw responseDecodingError
                 }
-                
                 
             }
             catch(let sessionError) {

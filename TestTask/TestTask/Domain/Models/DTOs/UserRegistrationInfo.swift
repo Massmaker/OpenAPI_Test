@@ -7,7 +7,15 @@
 
 import Foundation
 
+//MARK: - Response data
+struct UserRegistrationResponse:Decodable {
+    let success:Bool
+    let userId: UserId //Int
+    var message:String?
+}
 
+
+//MARK: - Request data
 struct UserRegistrationRequestInfo {
     
     let name:String
@@ -18,10 +26,9 @@ struct UserRegistrationRequestInfo {
 }
 
 
-struct UserRegistrationResponse:Decodable {
-    let success:Bool
-    let userId: UserId //Int
-    var message:String?
+protocol MultipartFormDataEncodable {
+    var formFields:[String:String] {get}
+    var fileDataInfo:FormFileDataInfo {get}
 }
 
 extension UserRegistrationRequestInfo: MultipartFormDataEncodable {
@@ -34,13 +41,8 @@ extension UserRegistrationRequestInfo: MultipartFormDataEncodable {
     }
 }
 
-
-protocol MultipartFormDataEncodable {
-    var formFields:[String:String] {get}
-    var fileDataInfo:FormFileDataInfo {get}
-}
-
-/// the default initializers are automatically available for structs. Be aware when using custop parameter strings :  `mimeType` should be valid for `fileName`
+/// The default initializers are automatically available for structs.
+/// - Note:  Be aware when using custom parameter strings :  `mimeType` should be valid for `fileName`
 struct FormFileDataInfo {
     let data:Data
     var fieldName:String = "photo"

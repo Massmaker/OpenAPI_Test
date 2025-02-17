@@ -6,11 +6,12 @@
 //
 
 import Foundation
+import Combine
 
 @MainActor
 final class RootModel:ObservableObject {
     
-    let imageCache = ImageCache.shared
+    private lazy var imageCache = ImageCache.shared
     
     private lazy var session:URLSession = {
         let s = URLSession(configuration: .default)
@@ -21,13 +22,22 @@ final class RootModel:ObservableObject {
         UserAccessTokenSupplier(session: session)
     }()
     
+    private lazy var userRegistrator:UserRegistrator = {
+        let registrator = UserRegistrator(tokenSupplier: WeakObject(self.accessTokenSupplier),session: session)
+        //subscribe to registration success for new UserId
+        usersListViewModel.subscribeForNewUserId(from: registrator.registeredUserIdPublisher)
+        return registrator
+    }()
     
     lazy var usersListViewModel:UsersListViewModel = UsersListViewModel(loader: UsersLoader(),
                                                                         pageItemsCount: 6,
-                                                                        profilePhotoCache: ImageCache.shared)
+                                                                        profilePhotoCache: imageCache,
+                                                                        newUserbyIdLoader: {
+                                                                            UserByIdLoader(session: self.session)
+                                                                        })
     
     lazy var userSignupViewModel:SignupViewModel = SignupViewModel(userPositionsLoader: UserPositionsLoader(session: self.session),
-                                                                   cameraAccessHandler: CameraUsagePermissionsHandler(), userRegistrator: UserRegistrator(tokenSupplier: WeakObject(self.accessTokenSupplier), session: session))
+                                                                   cameraAccessHandler: CameraUsagePermissionsHandler(), userRegistrator: WeakObject(self.userRegistrator))
     
  
     private func getUserByIdLoader() -> UserByIdLoading {

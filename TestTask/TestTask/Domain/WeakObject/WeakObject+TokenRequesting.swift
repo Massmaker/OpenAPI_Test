@@ -16,3 +16,14 @@ extension WeakObject:AccessTokenSupplier where T:AccessTokenSupplier {
         return try await object.getAccessToken()
     }
 }
+
+extension WeakObject:UserRegistration where T:UserRegistration {
+    func registerNew(user: UserRegistrationRequestInfo) async throws -> (userId: UserId, message: String) {
+        guard let object else {
+            throw WeakObjectError.noUnderlyingObject
+        }
+        return try await object.registerNew(user: user)
+    }
+    
+    
+}

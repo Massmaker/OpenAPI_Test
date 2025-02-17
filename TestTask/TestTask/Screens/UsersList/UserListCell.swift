@@ -12,34 +12,15 @@ struct UserListCell: View {
     var avatarImage:UIImage?
     
     var body: some View {
-        HStack (alignment: .top, spacing:36){
-            VStack {
-                imageView
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 50, height: 50)
-                    .clipShape(Circle())
-                    .foregroundStyle(.quaternary)
-            }
+        if #available(iOS 16.0, *) {
+          content
+            .alignmentGuide(.listRowSeparatorLeading, computeValue: { value in
+                return 86
+            })
             
-            VStack(alignment: .leading) {
-                Text(user.name)
-                    .heading1TextStyle()
-                    .padding(.bottom, 4)
-                
-                Text(user.position)
-                    .body3TextStyle(secondary: true)
-                
-                Text(user.email)
-                    .body3TextStyle()
-                    .padding(.top, 8)
-                
-                Text(user.phone)
-                    .body3TextStyle()
-            }
-            
+        } else {
+            content
         }
-        .padding(.vertical, 24)
         
     }
     
@@ -50,6 +31,39 @@ struct UserListCell: View {
         else {
             Image(systemName: "questionmark.circle.fill")
         }
+    }
+    
+    @ViewBuilder
+    private var content: some View {
+        HStack (alignment: .top, spacing:36){
+            VStack {
+                imageView
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 50, height: 50)
+                    .clipShape(Circle())
+                    .foregroundStyle(.quaternary)
+            }
+            
+            VStack(alignment: .leading, spacing:0) {
+                Text(user.name)
+                    .heading1TextStyle()
+                    .padding(.bottom, 4)
+                
+                Text(user.position)
+                    .body3TextStyle(secondary: true)
+                
+                Text(user.email)
+                    .body3TextStyle()
+                    .padding(.top, 4)
+                
+                Text(user.phone)
+                    .body3TextStyle()
+            }
+            
+        }
+        .padding(.vertical, 16)
+        
     }
 }
 

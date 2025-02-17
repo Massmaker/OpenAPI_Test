@@ -7,7 +7,7 @@
 
 import Foundation
 import UIKit
-
+/// Data struct to display User info in the lists
 struct UserUIInfo {
     let user:User
     var profileImage:UIImage?

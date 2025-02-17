@@ -28,12 +28,15 @@ extension FocusedValues {
 struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker:CameraAccessPermissionsHandling, Reg:UserRegistration>: View {
     
     @ObservedObject var viewModel:SignupViewModel<PositionsLoader, CameraPermissionsChecker, Reg>
-//    @FocusState private var focusedTextField:FocuedTextField?
-    @FocusedBinding(\.textValue) var focusedTextBinding
+    @FocusState private var focusedTextField:FocuedTextField?
+    
     
     var body: some View {
+    
         VStack(spacing:0) {
+            
             HeaderView(title: "Working with POST request")
+            
             ScrollView {
                 VStack(spacing: 16) {
                    
@@ -43,6 +46,7 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
                         .isMandatory()
                         .onTextInputValidation(viewModel.userNameValidation)
                         .textInputAutocapitalization(.words)
+                        .focused($focusedTextField, equals: .name)
                         
                     TextInputField("Email",
                                    text: $viewModel.emailString,
@@ -51,6 +55,7 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
                         .onTextInputValidation(viewModel.emailValidation)
                         .keyboardType(.emailAddress)
                         .textInputAutocapitalization(.never)
+                        .focused($focusedTextField, equals: .email)
                     
                     TextInputField("Phone",
                                    text: $viewModel.phoneNumberString,
@@ -59,23 +64,30 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
                         .isMandatory()
                         .onTextInputValidation(viewModel.phoneNumberValidation)
                         .textInputAutocapitalization(.never)
+                        .focused($focusedTextField, equals: .phone)
                 }
                 .padding()
                 
                 positionSelectionView
                 
                 uploadPhotoActionView
-              
-                Spacer(minLength: 60) //scroll view insets, pre iOS 17
+                    .padding(.horizontal)
+                
+                Spacer(minLength: 64) //scroll view insets, pre iOS 17
             }
-        
-            Button("Sign up", action: {
-                viewModel.sendSignup()
-            })
-            .buttonStyle(.primaryButtonStyle)
-            .disabled(!viewModel.isRegistrationAvailable)
-            .padding(.bottom, 8)
-            
+            .overlay(alignment: .bottom) {
+                if let _ = focusedTextField {
+                    EmptyView()
+                }
+                else {
+                    Button("Sign up", action: {
+                        viewModel.sendSignup()
+                    })
+                    .buttonStyle(.primaryButtonStyle)
+                    .disabled(!viewModel.isRegistrationAvailable)
+                    .padding(.bottom, 8)
+                }
+            }
         }
         .overlay(content: {
             if viewModel.isRegistrationInProgress {
@@ -90,6 +102,9 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
         })
         .onAppear{
             viewModel.onViewAppear()
+        }
+        .onDisappear {
+            viewModel.onViewDisappear()
         }
         .sheet(item: $viewModel.imageSourceType, content: {type in
 
@@ -118,10 +133,7 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
         }, message: { alertInfo in
             Text(alertInfo.message ?? "")
         })
-        .fullScreenCover(item: $viewModel.signupResult,
-                         onDismiss: {
-            
-        }, content: {signupResult in
+        .fullScreenCover(item: $viewModel.signupResult, content: {signupResult in
             ResultStateView(success: signupResult.success, message: signupResult.message, actionTitle: signupResult.action.title, primaryAtion: signupResult.action.work, closeAction: {
                 viewModel.justDismissResultView()
             })
@@ -158,29 +170,20 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
     }
     
     @ViewBuilder private var uploadPhotoActionView: some View {
-        RoundedRectangle(cornerRadius: 4.0, style: .circular)
-            .stroke(Color.secondaryInactive, lineWidth: 1.0)
-            .frame(height:56)
-            .overlay(content: {
-                HStack(content: {
-                    Text("Upload your photo")
-                        .body2TextStyle(secondary: true)
-                    Spacer()
-                    Button(action: {
-                        viewModel.startPhotoSelection()
-                    }, label: {
-                        Text("Upload")
-                    })
-                    .buttonStyle(.secondaryButtonStyle)
-                })
-                .padding(.horizontal)
-            })
-            .padding(.horizontal)
+        
+        ActionButtonContainerView(isValid: viewModel.uiIsPhotoValid,
+                                  title: "Upload your photo",
+                                  actionTitle: "Upload",
+                                  action: viewModel.startPhotoSelection,
+                                  validationText: "Photo is required")
+            .isMandatory()
     }
 }
 
 #Preview {
 //    SignupView(viewModel: SignupViewModel<UserPositionsLoader>(userPositionsLoader: UserPositionsLoader()))
     
-    SignupView(viewModel: SignupViewModel(userPositionsLoader: UserPositionsDummy(), cameraAccessHandler: CameraAccessPermissionsDummy(), userRegistrator: UserRegistrationDummy(succeeding: false)))
+    SignupView(viewModel: SignupViewModel(userPositionsLoader: UserPositionsDummy(),
+                                          cameraAccessHandler: CameraAccessPermissionsDummy(),
+                                          userRegistrator: UserRegistrationDummy(succeeding: false)))
 }

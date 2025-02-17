@@ -6,13 +6,12 @@
 //
 
 import Foundation
-struct UserPosition: Codable, Hashable {
+struct UserPosition: Decodable, Hashable {
     let id: Int
     let name: String
 }
 
 /// - Note: When decoding happens it using `'init(from decoder: any Decoder) throws'`  automatically sorts the `positions` array by id in the ascendong order
-
 struct UserPositionsResponse :Decodable {
     let success:Bool
     let positions:[UserPosition]

@@ -23,7 +23,7 @@ final class GetRequestsBuilder {
         
         let getURLString = api.requestPath()
         
-        guard getURLString.firstIndex(of: "&") == nil else {
+        guard getURLString.firstIndex(of: "&") == nil else { //just some minimum safety
             throw URLError(.unsupportedURL)
         }
         
