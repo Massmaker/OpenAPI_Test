@@ -288,18 +288,18 @@ struct TextInputField:View {
 //MARK: -
 //MARK: - Mandatory
 
-fileprivate struct TextInputFieldMandatory: EnvironmentKey {
+fileprivate struct InputFieldMandatory: EnvironmentKey {
     static var defaultValue: Bool = false
 }
 
 extension EnvironmentValues {
     var isMandatory:Bool {
         get {
-            self[TextInputFieldMandatory.self]
+            self[InputFieldMandatory.self]
         }
         
         set {
-            self[TextInputFieldMandatory.self] = newValue
+            self[InputFieldMandatory.self] = newValue
         }
     }
 }

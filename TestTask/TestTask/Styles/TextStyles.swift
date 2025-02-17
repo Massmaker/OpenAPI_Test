@@ -64,8 +64,8 @@ extension View {
         modifier(TextBodyModifier(font: .mainFont(size: 18), lineHeight: 24, secondary: secondary))
     }
     
-    func body3TextStyle(secondary:Bool = false) -> some View {
-        modifier(TextBodyModifier(font: .mainFont(size: 18), lineHeight:20, secondary: secondary))
+    func body3TextStyle(secondary:Bool = false, error:Bool = false) -> some View {
+        modifier(TextBodyModifier(font: .mainFont(size: 18), lineHeight:20, secondary: secondary, error: error))
     }
     
     func subtitleTextInputStyle(secondary:Bool = false) -> some View {
@@ -75,4 +75,6 @@ extension View {
     func subtitleErrorTextStyle() -> some View {
         modifier(TextBodyModifier(font: .mainFont(size: 16), lineHeight:16, secondary:false, error:true))
     }
+    
+    
 }

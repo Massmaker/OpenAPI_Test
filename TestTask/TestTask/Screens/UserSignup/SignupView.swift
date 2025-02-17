@@ -32,8 +32,11 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
     @FocusedBinding(\.textValue) var focusedTextBinding
     
     var body: some View {
+    
         VStack(spacing:0) {
+            
             HeaderView(title: "Working with POST request")
+            
             ScrollView {
                 VStack(spacing: 16) {
                    
@@ -65,7 +68,8 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
                 positionSelectionView
                 
                 uploadPhotoActionView
-              
+                    .padding(.horizontal)
+                
                 Spacer(minLength: 60) //scroll view insets, pre iOS 17
             }
         
@@ -90,6 +94,9 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
         })
         .onAppear{
             viewModel.onViewAppear()
+        }
+        .onDisappear {
+            viewModel.onViewDisappear()
         }
         .sheet(item: $viewModel.imageSourceType, content: {type in
 
@@ -118,10 +125,7 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
         }, message: { alertInfo in
             Text(alertInfo.message ?? "")
         })
-        .fullScreenCover(item: $viewModel.signupResult,
-                         onDismiss: {
-            
-        }, content: {signupResult in
+        .fullScreenCover(item: $viewModel.signupResult, content: {signupResult in
             ResultStateView(success: signupResult.success, message: signupResult.message, actionTitle: signupResult.action.title, primaryAtion: signupResult.action.work, closeAction: {
                 viewModel.justDismissResultView()
             })
@@ -158,25 +162,13 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
     }
     
     @ViewBuilder private var uploadPhotoActionView: some View {
-        RoundedRectangle(cornerRadius: 4.0, style: .circular)
-            .stroke(Color.secondaryInactive, lineWidth: 1.0)
-            .frame(height:56)
-            .overlay(content: {
-                HStack(content: {
-                    Text("Upload your photo")
-                        .body2TextStyle(secondary: true)
-                    Spacer()
-                    Button(action: {
-                        viewModel.startPhotoSelection()
-                    }, label: {
-                        Text("Upload")
-                    })
-                    .buttonStyle(.secondaryButtonStyle)
-                })
-                .padding(.horizontal)
-            })
-            .padding(.horizontal)
-            
+        
+        ActionButtonContainerView(isValid: viewModel.uiIsPhotoValid,
+                                  title: "Upload your photo",
+                                  actionTitle: "Upload",
+                                  action: viewModel.startPhotoSelection,
+                                  validationText: "Photo is required")
+            .isMandatory()
     }
 }
 

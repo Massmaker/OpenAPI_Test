@@ -35,6 +35,8 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
     
     @Published var signupResult:UserSignupResult?
     
+    @Published private(set) var uiIsPhotoValid:Bool = true
+    
     var alertInfo:AlertInfo? {
         didSet {
             if let _ = alertInfo, !isAlertPresented {
@@ -74,6 +76,8 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
     private let userPositionsLoader: PositionsLoader
     private let cameraPermissionsHandler: CameraPermissionsChecker
     private let userRegistrator: Registrator
+    
+    private var wasPresentedImageDialogue:Bool = false
     
     init(selectedPosition: UserPosition? = nil,
          availablePositions: [UserPosition] = [],
@@ -150,6 +154,22 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
                 self.isRegistrationAvailable = isAvailable
             })
             .store(in: &cancellables)
+        
+        $imageSourceType
+            .removeDuplicates()
+            .sink {[unowned self] sourceType in
+                if let _ = sourceType {
+                    wasPresentedImageDialogue = true
+                    return
+                }
+                
+                if wasPresentedImageDialogue, sourceType == nil {
+                    wasPresentedImageDialogue = false
+                    uiIsPhotoValid = profileImageDataCurrentValue.value != nil
+                }
+            }
+            .store(in: &cancellables)
+        
     }
     
     //MARK: - UI Actions
@@ -265,6 +285,8 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
                                                 action: (title:"Got it", work:{[unowned self] in
                     signupResult = nil
                 }))
+                
+                reset()
             }
             catch(let error) {
                 //handle registration attempt failure
@@ -360,9 +382,11 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
         
         if isValid, let imageData = image.jpegData(compressionQuality: 1.0) {
             self.profileImageDataCurrentValue.send(imageData)
+            self.uiIsPhotoValid = true
         }
         else {
             self.profileImageDataCurrentValue.send(nil)
+            self.uiIsPhotoValid = false
         }
         
         //cleanup
