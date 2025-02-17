@@ -176,11 +176,14 @@ struct SignupView<PositionsLoader:UserPositionsLoading, CameraPermissionsChecker
                 .padding(.horizontal)
             })
             .padding(.horizontal)
+            
     }
 }
 
 #Preview {
 //    SignupView(viewModel: SignupViewModel<UserPositionsLoader>(userPositionsLoader: UserPositionsLoader()))
     
-    SignupView(viewModel: SignupViewModel(userPositionsLoader: UserPositionsDummy(), cameraAccessHandler: CameraAccessPermissionsDummy(), userRegistrator: UserRegistrationDummy(succeeding: false)))
+    SignupView(viewModel: SignupViewModel(userPositionsLoader: UserPositionsDummy(),
+                                          cameraAccessHandler: CameraAccessPermissionsDummy(),
+                                          userRegistrator: UserRegistrationDummy(succeeding: false)))
 }

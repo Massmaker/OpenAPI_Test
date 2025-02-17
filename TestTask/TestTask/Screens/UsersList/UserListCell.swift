@@ -27,8 +27,15 @@ struct UserListCell: View {
                     .heading1TextStyle()
                     .padding(.bottom, 4)
                 
+#if DEBUG
+                Text("\(user.position) (id: \(user.id))")
+                    .body3TextStyle(secondary: true)
+                
+                #else
                 Text(user.position)
                     .body3TextStyle(secondary: true)
+                
+                #endif
                 
                 Text(user.email)
                     .body3TextStyle()

@@ -159,6 +159,12 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
         }
     }
     
+    func onViewDisappear() {
+        //perform some memory cleanup
+        reset()
+        
+    }
+    
     func selectPosition(_ position:UserPosition) {
         self.selectedPosition = position
     }
@@ -235,7 +241,7 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
         
         isRegistrationInProgress = true
         
-        let task:Task<Void, Never> =
+        //let task:Task<Void, Never> =
         Task{[name, position, email, phone, imageData, unowned self] in
             do {
                 let registrationSuccess = try await self.userRegistrator.registerNew(user: UserRegistrationRequestInfo(name: name, email: email, phone: phone, positionId: position, photo: imageData))
@@ -244,9 +250,14 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
                     return
                 }
                 
+                
+                
+#if DEBUG
                 let userId = registrationSuccess.userId
                 let message = registrationSuccess.message
-
+                logger.warning("Registration Success message:\"\(message)\", User Id: \(userId)")
+#endif
+                
                 isRegistrationInProgress = false
                 
                 signupResult = UserSignupResult(success: true,
@@ -326,6 +337,23 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
     }
     
     //MARK: -
+    private func reset() {
+        if isRegistrationInProgress {
+            isRegistrationInProgress = false
+        }
+        
+        profileImageDataCurrentValue.send(nil)
+        imageSourceType = nil
+        nameString = ""
+        emailString = ""
+        phoneNumberString = ""
+        selectedPosition = nil
+        isRegistrationAvailable = false
+        positionLoadingIsError = false
+        isAlertPresented = false
+        alertInfo = nil
+    }
+    
     private func processImage(_ image:UIImage) {
         let validator = UserProfileImageValidator()
         let isValid = validator.validate(image)
@@ -377,12 +405,16 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
         if case .detailedError(let failureResponse, let codeOrNil) = apiError {
             logger.error("Message: \(failureResponse.message ?? "–"),\nDetails: \"\(String(describing:(failureResponse.fails)))\" ")
             
-            signupResult = UserSignupResult(success: false,
-                                            message: "\(failureResponse.message ?? "Validation errors")",
-                                            action: (title:"Got it", work:{[unowned self] in
-                self.signupResult = nil
-            }))
+            guard let code = codeOrNil, let message = failureResponse.message else {
+                signupResult = UserSignupResult(success: false,
+                                                message: "\(failureResponse.message ?? "Validation errors")",
+                                                action: (title:"Got it", work:{[unowned self] in
+                    self.signupResult = nil
+                }))
+                return
+            }
             
+            handleSignupCode(code: code, message: message)
         }
     }
     

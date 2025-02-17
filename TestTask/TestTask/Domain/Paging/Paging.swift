@@ -17,3 +17,9 @@ protocol Pageable {
     func loadPage(after currentPage:PageInfo, size:Int) async throws -> (items:[Value], pageInfo:PageInfo)
 }
 
+extension Pageable {
+    func reloadLastPage(returnResults:Bool = false) async throws -> (items:[Value], pageInfo:PageInfo) {
+        fatalError("\(#function) not implemented in the Pageable confirming instance")
+    }
+}
+

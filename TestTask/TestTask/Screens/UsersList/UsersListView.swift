@@ -48,5 +48,5 @@ struct UsersListView: View {
 }
 
 #Preview {
-    UsersListView(viewModel: UsersListViewModel(loader: UsersLoader(), pageItemsCount: 6, profilePhotoCache: ImageCache.shared))
+    UsersListView(viewModel: UsersListViewModel(loader: UsersLoader(), pageItemsCount: 6, profilePhotoCache: ImageCache.shared, newUserbyIdLoader: { UserByIdLoaderDummy() }))
 }

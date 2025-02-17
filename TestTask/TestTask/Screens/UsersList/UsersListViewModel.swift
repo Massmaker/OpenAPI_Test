@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import OSLog
+import Combine
 
 #if DEBUG
 fileprivate let logger = Logger(subsystem: "ViewModels", category: "UsersListViewModel")
@@ -29,7 +30,9 @@ final class UsersListViewModel<Loader, AvatarCache:DataForURLCache>:ObservableOb
     private let usersSource: Loader
     private(set) var pageSize:Int
     private var currentPage:PageInfo = .default
+    
     let imageCache: AvatarCache
+    
     private(set) var loadingState:LoadingStatus = .idle {
         didSet {
             switch loadingState {
@@ -47,8 +50,6 @@ final class UsersListViewModel<Loader, AvatarCache:DataForURLCache>:ObservableOb
     @Published private(set) var users:[UserUIInfo] = []
     @Published private(set) var isLoading:Bool = false
     
-    var lastApearedUserIndex:Int = 0
-    
     private var currentTask:Task<Void,Never>? {
         willSet {
             if let current = currentTask, !current.isCancelled {
@@ -57,18 +58,29 @@ final class UsersListViewModel<Loader, AvatarCache:DataForURLCache>:ObservableOb
         }
     }
     
-    init(loader: Loader, pageItemsCount:Int, profilePhotoCache: AvatarCache) {
+    private var newUserIdCancellable:AnyCancellable?
+    
+    private var userByIdLoaderFunction: (() -> any UserByIdLoading)
+    
+    //MARK: -
+    
+    init(loader: Loader, pageItemsCount:Int, profilePhotoCache: AvatarCache, newUserbyIdLoader supplierFunction: @escaping () -> some UserByIdLoading ) {
         self.usersSource = loader
         self.imageCache = profilePhotoCache
-        
+        self.userByIdLoaderFunction = supplierFunction
         pageSize = pageItemsCount
     }
     
     func onViewAppear() {
+        
+        
         if users.isEmpty {
 
-            currentPage = PageInfo(hasNext: true, nextCursor: API.getUsers(page: 1, size: pageSize)
-                .requestPath())
+            let firstUsersPagePath:String = API.getUsers(page: 1, size: pageSize)
+                                                .requestPath()
+            
+            currentPage = PageInfo(hasNext: true,
+                                   nextCursor:firstUsersPagePath)
             
             loadingState = .loadingFirstPage
             
@@ -128,6 +140,22 @@ final class UsersListViewModel<Loader, AvatarCache:DataForURLCache>:ObservableOb
         currentPage.hasNext
     }
     
+    fileprivate func startLoadingAvatarFor(_ photoURLString: UserPhotoLink, _ userId: UserId) {
+        logger.notice("postponing the Image data loading")
+        let imageTask =  Task {[weak self] in
+            guard let self else {
+                return
+            }
+            
+            if let imageData = await imageCache.readData(forLink:  photoURLString) {
+                logger.notice("Updating with image data \(imageData.count) bytes")
+                self.updateAvatar(by: userId, with: imageData)
+            }
+        }
+        
+        self.avatarTasks[photoURLString] = imageTask
+    }
+    
     private func loadMoreUsers() async {
         do {
             let response = try await usersSource.loadPage(after: currentPage, size: pageSize)
@@ -139,16 +167,16 @@ final class UsersListViewModel<Loader, AvatarCache:DataForURLCache>:ObservableOb
             let receivedUsers = response.items
             let pageInfo = response.pageInfo
             self.currentPage = pageInfo
-            var items:[UserUIInfo] = self.users + receivedUsers.map({UserUIInfo(user: $0)})
-    
-            items.sort {
-                $0.registrationTimestamp < $1.registrationTimestamp
-            }
+            
+            let items:[UserUIInfo] = receivedUsers
+                .map({UserUIInfo(user: $0)})
+                .sorted { $0.registrationTimestamp < $1.registrationTimestamp }
+            
             
             DispatchQueue.main.async(execute: {[weak self] in
                 guard let self else { return }
                 logger.notice("Updating with new users")
-                self.users = items
+                self.users += items
                 loadingState = .idle
             })
             
@@ -161,25 +189,13 @@ final class UsersListViewModel<Loader, AvatarCache:DataForURLCache>:ObservableOb
                     (userId: $0.id, imageURLString:$0.photo!)
                 }
                 .forEach { (userId, photoURLString) in
-                    logger.notice("postponing the Image data loading")
-                    let imageTask =  Task {[weak self] in
-                        guard let self else {
-                            return
-                        }
-                        
-                        if let imageData = await imageCache.readData(forLink:  photoURLString) {
-                            logger.notice("Updating with image data \(imageData.count) bytes")
-                            self.updateAvatar(by: userId, with: imageData)
-                        }
-                    }
-                    
-                    self.avatarTasks[photoURLString] = imageTask
+                    startLoadingAvatarFor(photoURLString, userId)
                 }
             
         }
         catch (let error){
             if let apiError = error as? APICallError {
-                if case .reasonableMessage(let string, let handledErrorStatusCode) = apiError {
+                if case .reasonableMessage(_ , let handledErrorStatusCode) = apiError {
                     if case .notFound = handledErrorStatusCode {
                         currentPage = PageInfo(hasNext: false, nextCursor: nil)
                         DispatchQueue.main.async {[unowned self] in
@@ -201,5 +217,22 @@ final class UsersListViewModel<Loader, AvatarCache:DataForURLCache>:ObservableOb
         }
         
         self.users[firstIndex].profileImage = uiImage
+    }
+    
+    //MARK: - User Registration new UserId handling
+    
+    func subscribeForNewUserId(from publisher: some Publisher<UserId, Never>) {
+        newUserIdCancellable =
+        publisher
+            .receive(on: DispatchQueue.main)
+            .sink {[weak self] newUserId in
+                guard let self else { return }
+                self.users.removeAll(keepingCapacity: true)
+//                self.currentPage = .init(hasNext: true, nextCursor: API.getUsers(page: 1, size: 6).requestPath())
+//                Task {[weak self] in
+//                    await self?.loadMoreUsers()
+//                }
+            }
+        
     }
 }
