@@ -141,14 +141,13 @@ final class UsersListViewModel<Loader, AvatarCache:DataForURLCache>:ObservableOb
     }
     
     fileprivate func startLoadingAvatarFor(_ photoURLString: UserPhotoLink, _ userId: UserId) {
-        logger.notice("postponing the Image data loading")
+        
         let imageTask =  Task {[weak self] in
             guard let self else {
                 return
             }
             
             if let imageData = await imageCache.readData(forLink:  photoURLString) {
-                logger.notice("Updating with image data \(imageData.count) bytes")
                 self.updateAvatar(by: userId, with: imageData)
             }
         }

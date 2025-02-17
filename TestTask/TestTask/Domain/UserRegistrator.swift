@@ -114,13 +114,14 @@ final class UserRegistrator:UserRegistration, RegisteredUserIdSource {
                         throw APICallError.reasonableMessage("Registration Failed", nil)
                     }
                     
+                    //SUCCESS registering new User:
                     let userId = registrationResponse.userId
                     
-                    defer {
-                        //send side effect if any subscription was done to it
-                        self.registeredUserIdSideEffectPassThrouth?.send(userId)
-                    }
                     
+                    //send side effect if any subscription was done to it
+                    self.registeredUserIdSideEffectPassThrouth?.send(userId)
+                    
+                    // finally return the received response values
                     if let message = registrationResponse.message {
                         return (userId:userId, message:message)
                     }
@@ -128,12 +129,10 @@ final class UserRegistrator:UserRegistration, RegisteredUserIdSource {
                         return (userId:userId, message:"")
                     }
                     
-                    
                 }
                 catch(let responseDecodingError) {
                     throw responseDecodingError
                 }
-                
                 
             }
             catch(let sessionError) {

@@ -217,7 +217,7 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
                             }
                         
                         case .unsupported:
-                            self?.displayAlert(title: "Camera Unsupported", message: "It seems that this device does not support taking pictures with camera", targetAction: nil, dismissAction: AlertAction.cancel)
+                            self?.displayAlert(title: "Camera Unsupported", message: "It seems like this device does not support taking pictures with camera", targetAction: nil, dismissAction: AlertAction.cancel)
                         }
                     }
                     return
@@ -269,14 +269,6 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
                 if Task.isCancelled {
                     return
                 }
-                
-                
-                
-#if DEBUG
-                let userId = registrationSuccess.userId
-                let message = registrationSuccess.message
-                logger.warning("Registration Success message:\"\(message)\", User Id: \(userId)")
-#endif
                 
                 isRegistrationInProgress = false
                 
@@ -471,12 +463,5 @@ final class SignupViewModel<PositionsLoader:UserPositionsLoading, CameraPermissi
                 self.signupResult = nil
             }))
         }
-    }
-}
-
-
-extension Task {
-    func eraseToAnyCancellable() -> AnyCancellable {
-        AnyCancellable(cancel)
     }
 }

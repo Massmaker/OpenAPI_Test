@@ -10,8 +10,6 @@ import Foundation
 final class UsersLoader {
 
     private let decoder:JSONDecoder
-    private var lastResponseInfo:(response:UsersPagedResponse, requestURL:URL)?
-    
     
     init() {
         let aDecoder = JSONDecoder()
@@ -32,33 +30,6 @@ extension UsersLoader: Pageable  {
         return try await loadUsersPageFrom(url: aURL)
     }
     
-    
-    func reloadLastPage(returnResults:Bool = false) async throws -> (items:[Value], pageInfo:PageInfo) {
-        guard let lastResponseInfo else {
-            throw APICallError.reasonableMessage("No valid page info to reload", HandledErrorStatusCode.notFound)
-        }
-        
-        let page = lastResponseInfo.response.page
-        let count = lastResponseInfo.response.count
-        
-        let lastRequestedPageURL = lastResponseInfo.requestURL
-        
-        if returnResults {
-            return  try await loadUsersPageFrom(url: lastRequestedPageURL)
-        }
-        else {
-            do {
-                let response = try await loadUsersPageFrom(url: lastRequestedPageURL)
-                
-                return (items:[], pageInfo:response.pageInfo)
-            }
-            catch {
-                throw error
-            }
- 
-        }
-    }
-    
     private func loadUsersPageFrom(url:URL) async throws -> (items:[Value], pageInfo:PageInfo) {
         do {
             let response = try await URLSession.shared.data(from: url)
@@ -75,8 +46,6 @@ extension UsersLoader: Pageable  {
                     let data = response.0
                     
                     let decodedResponse = try decoder.decode(UsersPagedResponse.self, from: data)
-                    
-                    self.lastResponseInfo = (response:decodedResponse, requestURL:url)
                     
                     let lvPageInfo:PageInfo
                     
