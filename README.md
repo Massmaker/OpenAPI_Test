@@ -27,7 +27,7 @@ and the UserSignup View is the view for the second tab.
 
 Each of theese "Content" views are loceted in the "Screens" folder of the project, together with the corresponding viewModels.
 
-The Screen views are lazily initialized and required workers are provided to threirs' viewModels also lazily from the RootModel.
+The Screen views are lazily initialized and required workers are provided to threir viewModels also lazily from the RootModel.
 
 All the work with creating the API requests is moved to corresponding worker classes.
 
@@ -39,16 +39,26 @@ Screen view's viewModel calls(uses) corresponding dependencies which were provid
 
 **Users List:**
 
-UsersList view model is responsible for loading the Users data chaunk using paging and maintains the array of the loaded User UI info objects. 
-Also it has ability to listen to the "New User did signup" ('subscribeForNewUserId(from:)') event and on the next UsersList view appearance starts reloading of the users list from an empty state.
+ - UsersList view model is responsible for loading the Users data chaunk using paging and maintains the array of the loaded User UI info objects.
+   - User profile avatar images are loaded asyncronously using the "singletone" shared ImageCache object and the corresponding List Item cells are updated.
+ - Also it has ability to listen to the "New User did signup" ('subscribeForNewUserId(from:)') event and on the next UsersList view appearance starts reloading of the users list from an empty state.
+   - The `subscribeForNewUserId(from:)` is called on UsersListViewModel when a SignupViewModel is created and a UserRegistrator object is passes as a dependency to it.
 
 **User Signup:**
 
- - UserSignup view model is responsible for acepting user text inputs and validating them as well as accepting the selected user's profile image and validating it.
-It uses seperate text or imageData validators for those checks.
+ - UserSignup view model is responsible for accepting user text inputs and validating them as well as accepting the selected user's profile image and validating it.
+It uses separate text or imageData validators for those checks.
 
- - Also the SignupViewModel loads the selectable 'UserPosition's to display a selectable ration buttons list
+ - Also the SignupViewModel loads the selectable 'UserPosition's to display a selectable radio buttons list
 
  - Also the SignupViewModel is calling the "Registrator" dependency to register user and displays success or failure screen as a result of that action.
+
+*Possible Improvements:*
+
+make Signup View model's separation of concerns:
+ - make the text and image data validators also injectable external dependencies
+ - remove the direct Worker (API callers) calls from the viewModels further deeper into the Domain logic structure
+ - generalize and broaden the error handlings, make it more precise.
+
 
 
