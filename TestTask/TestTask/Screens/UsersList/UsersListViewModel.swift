@@ -226,11 +226,8 @@ final class UsersListViewModel<Loader, AvatarCache:DataForURLCache>:ObservableOb
             .receive(on: DispatchQueue.main)
             .sink {[weak self] newUserId in
                 guard let self else { return }
+                //this will trigger the start loading users on the next onViewAppear() call
                 self.users.removeAll(keepingCapacity: true)
-//                self.currentPage = .init(hasNext: true, nextCursor: API.getUsers(page: 1, size: 6).requestPath())
-//                Task {[weak self] in
-//                    await self?.loadMoreUsers()
-//                }
             }
         
     }
